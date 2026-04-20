@@ -74,13 +74,22 @@ TeamDynamix workflows.
 
 ## ID Discovery Quick Start
 
-- Accounts/departments: `teamdynamix_list_accounts`
-- Ticket types/statuses/priorities: `teamdynamix_list_ticket_types`,
-  `teamdynamix_list_ticket_statuses`, `teamdynamix_list_ticket_priorities`
-- Users/groups: `teamdynamix_search_users`, `teamdynamix_search_groups`
-- Custom attributes: `teamdynamix_list_custom_attributes`
-- KB categories: `teamdynamix_list_kb_categories`
-- CI types/relationship types: `teamdynamix_list_ci_types`, `teamdynamix_list_ci_relationship_types`
+- Accounts/departments:
+  `teamdynamix_reference_data` + `action: "list_accounts"`
+- Ticket types/statuses/priorities:
+  - `teamdynamix_tickets` + `action: "list_ticket_types"`
+  - `teamdynamix_discovery` + `action: "list_ticket_statuses"`
+  - `teamdynamix_tickets` + `action: "list_ticket_priorities"`
+- Users/groups:
+  - `teamdynamix_people` + `action: "search_users"`
+  - `teamdynamix_people` + `action: "search_groups"`
+- Custom attributes:
+  `teamdynamix_reference_data` + `action: "list_custom_attributes"`
+- KB categories:
+  `teamdynamix_knowledge_base` + `action: "list_kb_categories"`
+- CI types/relationship types:
+  - `teamdynamix_cmdb` + `action: "list_ci_types"`
+  - `teamdynamix_cmdb` + `action: "list_ci_relationship_types"`
 
 ## Runbooks
 

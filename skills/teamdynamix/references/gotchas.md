@@ -14,15 +14,18 @@ Capture high-value corrections that prevent repeated mistakes.
 
 ### Mistake: Updating a ticket using guessed status name
 
-**Fix:** Resolve status ID via `teamdynamix_list_ticket_statuses` first.
+**Fix:** Resolve status ID via
+`teamdynamix_discovery` + `action: "list_ticket_statuses"` first.
 
 ### Mistake: Attempting KB update with category label text
 
-**Fix:** Use `teamdynamix_list_kb_categories` to map label -> numeric `CategoryID`.
+**Fix:** Use `teamdynamix_knowledge_base` + `action: "list_kb_categories"`
+to map label -> numeric `CategoryID`.
 
 ### Mistake: Using stale or wrong user identifier
 
-**Fix:** Re-run `teamdynamix_search_users`; use returned GUID exactly.
+**Fix:** Re-run `teamdynamix_people` + `action: "search_users"`;
+use returned GUID exactly.
 
 ### Mistake: Removing contact/asset without confirm gate
 
@@ -30,7 +33,7 @@ Capture high-value corrections that prevent repeated mistakes.
 
 ### Mistake: Assuming "product types" tool exists
 
-**Fix:** Use `teamdynamix_list_product_models`.
+**Fix:** Use `teamdynamix_assets` + `action: "list_product_models"`.
 
 ## Pre-write checklist
 

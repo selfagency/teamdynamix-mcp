@@ -141,7 +141,7 @@ function configureNpmAuth(registry) {
   }
 
   const authLine = `${registryKey}:_authToken=${npmToken}`;
-  tempNpmConfigDir = mkdtempSync(resolve(tmpdir(), 'mcp-server-template-release-'));
+  tempNpmConfigDir = mkdtempSync(resolve(tmpdir(), 'teamdynamix-mcp-release-'));
 
   const tempUserConfig = resolve(tempNpmConfigDir, '.npmrc');
   const prefix = existingConfig.trimEnd();
@@ -429,7 +429,9 @@ async function main() {
   await sleep(10_000);
 
   const spinner = ora({ text: 'CI: queued' }).start();
-  await waitForWorkflow(octokit, 'CI', owner, repo, headSha, spinner);
+  await waitForWorkflow(octokit, 'CI', owner, repo, headSha, spinner, {
+    autoDispatch: false,
+  });
 
   // --- Tag + publish --------------------------------------------------------
 

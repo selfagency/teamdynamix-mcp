@@ -10,6 +10,7 @@ async function main() {
   const outDir = resolve(__dirname, '..', 'dist');
   const raw = await readFile(rootPkgPath, 'utf8');
   const { name, version, description, keywords, homepage, bugs, repository, license, author } = JSON.parse(raw);
+  const binName = name.startsWith('@') ? (name.split('/')[1] ?? name) : name;
 
   const distPkg = {
     name,
@@ -26,7 +27,7 @@ async function main() {
     types: './index.d.ts',
     files: ['./index.js', './index.js.map', './index.d.ts'],
     bin: {
-      'mcp-server-template': './index.js',
+      [binName]: './index.js',
     },
     exports: {
       '.': {

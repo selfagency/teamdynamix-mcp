@@ -7,27 +7,28 @@ Use these runbooks for common operator tasks.
 - Objective: find target ticket, inspect full context, apply update safely, verify result.
 
 1. Discover filters and IDs:
-   - `teamdynamix_list_ticket_statuses`
-   - `teamdynamix_list_ticket_priorities`
-   - `teamdynamix_search_users`
+   - `teamdynamix_discovery` + `action: "list_ticket_statuses"`
+   - `teamdynamix_tickets` + `action: "list_ticket_priorities"`
+   - `teamdynamix_people` + `action: "search_users"`
 
 2. Search candidates:
-   - `teamdynamix_search_tickets`
+   - `teamdynamix_tickets` + `action: "search_tickets"`
 
 3. Load full ticket:
-   - `teamdynamix_get_ticket`
+   - `teamdynamix_tickets` + `action: "get_ticket"`
 
 4. Optional activity history:
-   - `teamdynamix_get_ticket_feed`
+   - `teamdynamix_tickets` + `action: "get_ticket_feed"`
 
 5. Write update (requires write flag):
-   - `teamdynamix_update_ticket`
+   - `teamdynamix_tickets` + `action: "update_ticket"`
 
 6. Add note if needed:
-   - `teamdynamix_add_ticket_comment`
+   - `teamdynamix_tickets` + `action: "add_ticket_comment"`
 
 7. Verify:
-   - re-run `teamdynamix_get_ticket` and/or `teamdynamix_get_ticket_feed`
+   - re-run `teamdynamix_tickets` with `action: "get_ticket"`
+   - and/or `teamdynamix_tickets` with `action: "get_ticket_feed"`
 
 Success checks:
 
@@ -42,18 +43,20 @@ Success checks:
 1. Resolve ticket and related IDs.
 
 2. Tasks:
-   - list: `teamdynamix_get_ticket_tasks`
-   - create: `teamdynamix_create_ticket_task` (write flag)
+   - list: `teamdynamix_ticket_relationships` + `action: "get_ticket_tasks"`
+   - create: `teamdynamix_ticket_relationships` + `action: "create_ticket_task"` (write flag)
 
 3. Contacts:
-   - list: `teamdynamix_get_ticket_contacts`
-   - add: `teamdynamix_add_ticket_contact` (write flag)
-   - remove: `teamdynamix_remove_ticket_contact` (write flag + `confirm: true`)
+   - list: `teamdynamix_ticket_relationships` + `action: "get_ticket_contacts"`
+   - add: `teamdynamix_ticket_relationships` + `action: "add_ticket_contact"` (write flag)
+   - remove: `teamdynamix_ticket_relationships` + `action: "remove_ticket_contact"`
+     (write flag + `confirm: true`)
 
 4. Assets:
-   - list: `teamdynamix_list_ticket_assets`
-   - add: `teamdynamix_add_ticket_asset` (write flag)
-   - remove: `teamdynamix_remove_ticket_asset` (write flag + `confirm: true`)
+   - list: `teamdynamix_ticket_relationships` + `action: "list_ticket_assets"`
+   - add: `teamdynamix_ticket_relationships` + `action: "add_ticket_asset"` (write flag)
+   - remove: `teamdynamix_ticket_relationships` + `action: "remove_ticket_asset"`
+     (write flag + `confirm: true`)
 
 5. Verify by re-listing tasks/contacts/assets.
 
@@ -65,12 +68,12 @@ Success checks:
 
 - Objective: find or create KB content and keep category assignment correct.
 
-1. Discover categories: `teamdynamix_list_kb_categories`
-2. Search candidates: `teamdynamix_search_kb_articles`
-3. Load full article: `teamdynamix_get_kb_article`
+1. Discover categories: `teamdynamix_knowledge_base` + `action: "list_kb_categories"`
+2. Search candidates: `teamdynamix_knowledge_base` + `action: "search_kb_articles"`
+3. Load full article: `teamdynamix_knowledge_base` + `action: "get_kb_article"`
 4. Create or update:
-   - create: `teamdynamix_create_kb_article` (write flag)
-   - update: `teamdynamix_update_kb_article` (write flag)
+   - create: `teamdynamix_knowledge_base` + `action: "create_kb_article"` (write flag)
+   - update: `teamdynamix_knowledge_base` + `action: "update_kb_article"` (write flag)
 
 5. Verify by re-reading article.
 
@@ -83,19 +86,20 @@ Success checks:
 - Objective: locate asset/CI context and link to ticket workflows.
 
 1. Asset search/read:
-   - `teamdynamix_search_assets`
-   - `teamdynamix_get_asset`
+   - `teamdynamix_assets` + `action: "search_assets"`
+   - `teamdynamix_assets` + `action: "get_asset"`
 
 2. CI search/read:
-   - `teamdynamix_search_cis`
-   - `teamdynamix_get_ci`
+   - `teamdynamix_cmdb` + `action: "search_cis"`
+   - `teamdynamix_cmdb` + `action: "get_ci"`
 
 3. Validate CI metadata:
-   - `teamdynamix_list_ci_types`
-   - `teamdynamix_list_ci_relationship_types`
+   - `teamdynamix_cmdb` + `action: "list_ci_types"`
+   - `teamdynamix_cmdb` + `action: "list_ci_relationship_types"`
 
 4. Link asset to ticket if requested:
-   - `teamdynamix_add_ticket_asset` (write flag)
+   - `teamdynamix_ticket_relationships` + `action: "add_ticket_asset"`
+     (write flag)
 
 5. Verify by listing ticket assets.
 
@@ -104,16 +108,16 @@ Success checks:
 - Objective: track project execution issues and risks.
 
 1. Find project:
-   - `teamdynamix_search_projects`
-   - `teamdynamix_get_project`
+   - `teamdynamix_projects` + `action: "search_projects"`
+   - `teamdynamix_projects` + `action: "get_project"`
 
 2. Inspect existing records:
-   - `teamdynamix_get_project_issues`
-   - `teamdynamix_get_project_risks`
+   - `teamdynamix_projects` + `action: "get_project_issues"`
+   - `teamdynamix_projects` + `action: "get_project_risks"`
 
 3. Create new records (write flag):
-   - `teamdynamix_create_project_issue`
-   - `teamdynamix_create_project_risk`
+   - `teamdynamix_projects` + `action: "create_project_issue"`
+   - `teamdynamix_projects` + `action: "create_project_risk"`
 
 4. Verify by re-listing issues/risks.
 
@@ -121,8 +125,9 @@ Success checks:
 
 - Objective: retrieve time type metadata and user entries for date ranges.
 
-1. `teamdynamix_list_time_types`
-2. `teamdynamix_get_my_time_entries` with `StartDate` and `EndDate`
+1. `teamdynamix_time` + `action: "list_time_types"`
+2. `teamdynamix_time` + `action: "get_my_time_entries"`
+   with `StartDate` and `EndDate`
 3. Validate entries against expected date window and count.
 
 ## Error branches

@@ -1,99 +1,108 @@
-# TeamDynamix Tool Catalog (Source of Truth)
+# TeamDynamix Gateway Catalog (Source of Truth)
 
-The list below reflects currently registered tools in `src/tools/teamdynamix*.ts`.
+The MCP surface uses domain gateway tools. Each call uses:
 
-## TeamDynamix tools
+- `action`
+- `payload`
+- `response_format`
 
-### Discovery
+## Gateway tools and actions
 
-- `teamdynamix_server_status`
-- `teamdynamix_get_current_user`
-- `teamdynamix_list_applications`
-- `teamdynamix_list_ticket_statuses`
+### `teamdynamix_discovery`
 
-### Ticket metadata + lifecycle
+- `server_status`
+- `get_current_user`
+- `list_applications`
+- `list_ticket_statuses`
 
-- `teamdynamix_list_ticket_types`
-- `teamdynamix_list_ticket_priorities`
-- `teamdynamix_list_ticket_urgencies`
-- `teamdynamix_list_ticket_impacts`
-- `teamdynamix_list_ticket_sources`
-- `teamdynamix_get_ticket`
-- `teamdynamix_search_tickets`
-- `teamdynamix_create_ticket`
-- `teamdynamix_update_ticket`
-- `teamdynamix_add_ticket_comment`
-- `teamdynamix_get_ticket_feed`
+### `teamdynamix_tickets`
 
-### Ticket tasks/assets/contacts
+- `list_ticket_types`
+- `list_ticket_priorities`
+- `list_ticket_urgencies`
+- `list_ticket_impacts`
+- `list_ticket_sources`
+- `get_ticket`
+- `search_tickets`
+- `create_ticket`
+- `update_ticket`
+- `add_ticket_comment`
+- `get_ticket_feed`
 
-- `teamdynamix_get_ticket_tasks`
-- `teamdynamix_create_ticket_task`
-- `teamdynamix_list_ticket_assets`
-- `teamdynamix_add_ticket_asset`
-- `teamdynamix_remove_ticket_asset`
-- `teamdynamix_get_ticket_contacts`
-- `teamdynamix_add_ticket_contact`
-- `teamdynamix_remove_ticket_contact`
+### `teamdynamix_ticket_relationships`
 
-### People
+- `get_ticket_tasks`
+- `create_ticket_task`
+- `list_ticket_assets`
+- `add_ticket_asset`
+- `remove_ticket_asset`
+- `get_ticket_contacts`
+- `add_ticket_contact`
+- `remove_ticket_contact`
 
-- `teamdynamix_get_user`
-- `teamdynamix_search_users`
-- `teamdynamix_get_group`
-- `teamdynamix_search_groups`
-- `teamdynamix_get_group_members`
+### `teamdynamix_people`
 
-### Knowledge Base
+- `get_user`
+- `search_users`
+- `get_group`
+- `search_groups`
+- `get_group_members`
 
-- `teamdynamix_get_kb_article`
-- `teamdynamix_search_kb_articles`
-- `teamdynamix_list_kb_categories`
-- `teamdynamix_create_kb_article`
-- `teamdynamix_update_kb_article`
+### `teamdynamix_knowledge_base`
 
-### Assets + CMDB
+- `get_kb_article`
+- `search_kb_articles`
+- `list_kb_categories`
+- `create_kb_article`
+- `update_kb_article`
 
-- `teamdynamix_get_asset`
-- `teamdynamix_search_assets`
-- `teamdynamix_list_asset_statuses`
-- `teamdynamix_list_product_models`
-- `teamdynamix_get_ci`
-- `teamdynamix_search_cis`
-- `teamdynamix_list_ci_types`
-- `teamdynamix_list_ci_relationship_types`
-- `teamdynamix_list_vendors`
+### `teamdynamix_assets`
 
-### Service Catalog
+- `get_asset`
+- `search_assets`
+- `list_asset_statuses`
+- `list_product_models`
 
-- `teamdynamix_list_services`
-- `teamdynamix_get_service`
-- `teamdynamix_search_services`
-- `teamdynamix_list_service_categories`
+### `teamdynamix_cmdb`
 
-### Projects + Time
+- `get_ci`
+- `search_cis`
+- `list_ci_types`
+- `list_ci_relationship_types`
+- `list_vendors`
 
-- `teamdynamix_get_project`
-- `teamdynamix_search_projects`
-- `teamdynamix_list_project_types`
-- `teamdynamix_get_project_plans`
-- `teamdynamix_get_project_issues`
-- `teamdynamix_get_project_risks`
-- `teamdynamix_create_project_issue`
-- `teamdynamix_create_project_risk`
-- `teamdynamix_list_time_types`
-- `teamdynamix_get_my_time_entries`
+### `teamdynamix_services`
 
-### Enumeration
+- `list_services`
+- `get_service`
+- `search_services`
+- `list_service_categories`
 
-- `teamdynamix_list_accounts`
-- `teamdynamix_get_account`
-- `teamdynamix_list_locations`
-- `teamdynamix_list_functional_roles`
-- `teamdynamix_list_custom_attributes`
+### `teamdynamix_projects`
+
+- `get_project`
+- `search_projects`
+- `list_project_types`
+- `get_project_plans`
+- `get_project_issues`
+- `get_project_risks`
+- `create_project_issue`
+- `create_project_risk`
+
+### `teamdynamix_time`
+
+- `list_time_types`
+- `get_my_time_entries`
+
+### `teamdynamix_reference_data`
+
+- `list_accounts`
+- `get_account`
+- `list_locations`
+- `list_functional_roles`
+- `list_custom_attributes`
 
 ## Notes
 
-- Prefer this file over README snippets for exact tool names.
-- `teamdynamix_list_product_models` is the correct asset model lookup name.
-- For destructive operations, check for `confirm: true` requirement before execution.
+- Prefer this file over README snippets for exact gateway/action names.
+- Destructive actions require `confirm: true`.
