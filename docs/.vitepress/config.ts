@@ -3,7 +3,7 @@ import { defineConfig } from 'vitepress';
 const SITE_URL = 'https://github.com/selfagency/teamdynamix-mcp';
 
 export default defineConfig({
-  title: 'teamdynamix-mcp',
+  title: 'TeamDynamix MCP Server',
   description: 'A TeamDynamix ITSM Model Context Protocol server with safety-gated write operations',
   lang: 'en-US',
   base: '/',
@@ -16,7 +16,7 @@ export default defineConfig({
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],
     ['meta', { name: 'theme-color', content: '#2563eb' }],
     ['meta', { property: 'og:type', content: 'website' }],
-    ['meta', { property: 'og:title', content: 'teamdynamix-mcp' }],
+    ['meta', { property: 'og:title', content: 'TeamDynamix MCP Server' }],
     ['meta', { property: 'og:url', content: SITE_URL }],
     [
       'meta',

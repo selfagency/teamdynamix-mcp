@@ -2,8 +2,7 @@
 layout: home
 
 hero:
-  name: teamdynamix-mcp
-  text: TeamDynamix MCP Server
+  name: TeamDynamix MCP Server
   tagline: Structured, safety-gated TeamDynamix ITSM operations for AI agents via MCP.
   actions:
     - theme: brand
