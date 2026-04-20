@@ -1,10 +1,10 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
   TeamDynamixApplicationSchema,
-  TeamDynamixTicketSchema,
   TeamDynamixKbArticleSchema,
   TeamDynamixListResponseSchema,
   TeamDynamixSingleResponseSchema,
+  TeamDynamixTicketSchema,
   TeamDynamixUserSchema,
 } from '../../schemas/index.js';
 

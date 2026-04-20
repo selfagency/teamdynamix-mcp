@@ -2,50 +2,51 @@
 title: Getting Started
 ---
 
-In this tutorial, you will run `teamdynamix-mcp`, connect an MCP client, and verify the connection with read-only tools.
+In this tutorial, you will configure `teamdynamix-mcp` in an MCP client,
+connect using the published package, and verify connectivity with read-only
+tools.
+
+If you want to run from source as a contributor, use the development guide:
+`docs/development/contributing.md`.
 
 ## Prerequisites
 
 - Node.js 20+
-- pnpm 10+
+- An MCP client (for example: VS Code or Claude Desktop)
 - TeamDynamix credentials
   - standard mode: `TEAMDYNAMIX_USERNAME` + `TEAMDYNAMIX_PASSWORD`
   - admin mode: `TEAMDYNAMIX_BEID` + `TEAMDYNAMIX_WEB_SERVICES_KEY`
 
-## Step 1: install and configure
+## Step 1: add server configuration
 
-1. Install dependencies:
-   - `pnpm install`
-2. Create local config:
-   - `cp .env.example .env`
-3. Fill `.env` with your TeamDynamix values.
+Add a TeamDynamix server entry to your MCP client config:
 
-## Step 2: start the server
+- command: `npx`
+- args: `-y`, `@selfagency/teamdynamix-mcp`
+- env:
+  - `TEAMDYNAMIX_BASE_URL`
+  - `TEAMDYNAMIX_AUTH_MODE`
+  - standard mode: `TEAMDYNAMIX_USERNAME`, `TEAMDYNAMIX_PASSWORD`
+  - admin mode: `TEAMDYNAMIX_BEID`, `TEAMDYNAMIX_WEB_SERVICES_KEY`
 
-Run:
+## Step 2: start your MCP client
 
-- `pnpm dev`
+Start or reload your MCP client so it launches the TeamDynamix MCP server.
 
-Expected: startup logs and an active stdio MCP process.
+Expected: your client shows an active TeamDynamix server using stdio transport.
 
-## Step 3: connect your MCP client
-
-Use stdio transport with:
-
-- command: `node`
-- args: `--import`, `tsx/esm`, `src/index.ts`
-
-## Step 4: verify tool connectivity
+## Step 3: verify tool connectivity
 
 Call these tools in order:
 
 1. `teamdynamix_server_status` — confirms credentials and base URL are configured
 2. `teamdynamix_get_current_user` — returns your authenticated user record
-3. `teamdynamix_list_applications` — lists all TeamDynamix apps your account can access
+3. `teamdynamix_list_applications` — lists accessible TeamDynamix apps
 
-Expected: responses arrive without errors, and `teamdynamix_server_status` shows `configured: true`.
+Expected: responses arrive without errors, and
+`teamdynamix_server_status` shows `configured: true`.
 
-## Step 5: verify a ticket app ID
+## Step 4: verify a ticket app ID
 
 Call `teamdynamix_list_applications`, pick the ticketing app, then call:
 

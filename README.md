@@ -11,17 +11,26 @@ A TypeScript [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) se
 - **Zod-validated inputs**: schema enforcement before any API call
 - **Agent skill and prompt included**: ready-to-use skill definition for GitHub Copilot and compatible agents
 
-## Quick start
+## Quick start (developer setup)
+
+This quick start is for contributors running the server from source in this
+repository. If you are a regular MCP client user, skip to
+[MCP client configuration](#mcp-client-configuration) and use the `npx`
+command examples.
 
 ```sh
-# 1. Install dependencies
+# 1. Clone the repository
+git clone https://github.com/selfagency/teamdynamix-mcp.git
+cd teamdynamix-mcp
+
+# 2. Install dependencies
 pnpm install
 
-# 2. Configure environment
+# 3. Configure environment
 cp .env.example .env
 # Edit .env with your TeamDynamix credentials and base URL
 
-# 3. Start the development server
+# 4. Start the development server
 pnpm dev
 ```
 
@@ -45,8 +54,8 @@ For admin mode, use `TEAMDYNAMIX_BEID` and `TEAMDYNAMIX_WEB_SERVICES_KEY` instea
   "servers": {
     "teamdynamix": {
       "type": "stdio",
-      "command": "node",
-      "args": ["--import", "tsx/esm", "/path/to/teamdynamix-mcp/src/index.ts"],
+      "command": "npx",
+      "args": ["-y", "@selfagency/teamdynamix-mcp"],
       "env": {
         "TEAMDYNAMIX_BASE_URL": "https://your-tenant.teamdynamix.com/TDWebApi",
         "TEAMDYNAMIX_AUTH_MODE": "standard",
@@ -64,8 +73,8 @@ For admin mode, use `TEAMDYNAMIX_BEID` and `TEAMDYNAMIX_WEB_SERVICES_KEY` instea
 {
   "mcpServers": {
     "teamdynamix": {
-      "command": "node",
-      "args": ["--import", "tsx/esm", "/path/to/teamdynamix-mcp/src/index.ts"],
+      "command": "npx",
+      "args": ["-y", "@selfagency/teamdynamix-mcp"],
       "env": {
         "TEAMDYNAMIX_BASE_URL": "https://your-tenant.teamdynamix.com/TDWebApi",
         "TEAMDYNAMIX_AUTH_MODE": "standard",
@@ -85,8 +94,8 @@ pnpm build   # outputs to dist/
 
 ```json
 {
-  "command": "node",
-  "args": ["/path/to/teamdynamix-mcp/dist/index.js"]
+  "command": "npx",
+  "args": ["-y", "@selfagency/teamdynamix-mcp"]
 }
 ```
 
