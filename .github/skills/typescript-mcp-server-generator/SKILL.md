@@ -10,7 +10,7 @@ Create a complete Model Context Protocol (MCP) server in TypeScript with the fol
 ## Requirements
 
 1. **Project Structure**: Create a new TypeScript/Node.js project with proper directory structure
-2. **NPM Packages**: Include @modelcontextprotocol/sdk, zod@3, and either express (for HTTP) or stdio support
+2. **NPM Packages**: Include @modelcontextprotocol/sdk, zod@4, and either express (for HTTP) or stdio support
 3. **TypeScript Configuration**: Proper tsconfig.json with ES modules support
 4. **Server Type**: Choose between HTTP (with Streamable HTTP transport) or stdio-based server
 5. **Tools**: Create at least one useful tool with proper schema validation
@@ -20,7 +20,7 @@ Create a complete Model Context Protocol (MCP) server in TypeScript with the fol
 
 ### Project Setup
 - Initialize with `npm init` and create package.json
-- Install dependencies: `@modelcontextprotocol/sdk`, `zod@3`, and transport-specific packages
+- Install dependencies: `@modelcontextprotocol/sdk`, `zod@4`, and transport-specific packages
 - Configure TypeScript with ES modules: `"type": "module"` in package.json
 - Add dev dependencies: `tsx` or `ts-node` for development
 - Create proper .gitignore file

@@ -61,7 +61,7 @@ export const TicketCreateSchema = z.object({
 export const TicketPatchSchema = z.object({
   TicketID: z.number().int().positive().describe('Ticket ID to update.'),
   Attributes: z
-    .record(z.string())
+    .record(z.string(), z.string())
     .describe(
       'Fields to update as key/value pairs. Keys must be valid ticket field names (e.g. "StatusID", "Title", "ResponsibleUID").',
     ),
@@ -239,7 +239,7 @@ export const TimeEntryQuerySchema = z.object({
  * Base schema for TeamDynamix entities with flexible additional fields.
  */
 export const TeamDynamixEntitySchema = z
-  .record(z.unknown())
+  .record(z.string(), z.unknown())
   .describe('Base TeamDynamix entity with flexible additional fields');
 
 /**
@@ -307,7 +307,7 @@ export const TeamDynamixGroupSchema = TeamDynamixNamedEntitySchema.extend({
  */
 export const TeamDynamixUserSchema = z
   .object({
-    UID: z.string({ required_error: 'User UID is required' }),
+    UID: z.string({ error: 'User UID is required' }),
     FullName: z.string().optional(),
     Email: z.string().email().optional(),
     IsActive: z.boolean().optional(),
@@ -318,9 +318,13 @@ export const TeamDynamixUserSchema = z
 /**
  * Generic array response schema (for list/search operations).
  */
-export const TeamDynamixListResponseSchema = z.array(z.record(z.unknown())).describe('Array of TeamDynamix entities');
+export const TeamDynamixListResponseSchema = z
+  .array(z.record(z.string(), z.unknown()))
+  .describe('Array of TeamDynamix entities');
 
 /**
  * Generic single response schema (for read/create/update operations).
  */
-export const TeamDynamixSingleResponseSchema = z.record(z.unknown()).describe('Single TeamDynamix entity response');
+export const TeamDynamixSingleResponseSchema = z
+  .record(z.string(), z.unknown())
+  .describe('Single TeamDynamix entity response');

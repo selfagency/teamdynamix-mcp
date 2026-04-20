@@ -30,7 +30,7 @@ describe('TeamDynamix Response Schemas', () => {
       const noIdApp = {
         Name: 'No ID App',
       };
-      expect(() => TeamDynamixApplicationSchema.parse(noIdApp)).toThrow('Required');
+      expect(() => TeamDynamixApplicationSchema.parse(noIdApp)).toThrow('expected number');
     });
 
     it('should allow additional fields', () => {
@@ -67,7 +67,7 @@ describe('TeamDynamix Response Schemas', () => {
         ID: 'not-a-number',
         Title: 'Bad Ticket',
       };
-      expect(() => TeamDynamixTicketSchema.parse(invalidTicket)).toThrow('Expected number');
+      expect(() => TeamDynamixTicketSchema.parse(invalidTicket)).toThrow('expected number');
     });
   });
 
@@ -142,7 +142,7 @@ describe('TeamDynamix Response Schemas', () => {
 
     it('should reject non-array responses', () => {
       const notArray = { ID: 1, Name: 'Single Entity' };
-      expect(() => TeamDynamixListResponseSchema.parse(notArray)).toThrow('Expected array');
+      expect(() => TeamDynamixListResponseSchema.parse(notArray)).toThrow('expected array');
     });
 
     it('should allow arrays with mixed field schemas', () => {
@@ -168,11 +168,11 @@ describe('TeamDynamix Response Schemas', () => {
 
     it('should reject non-object responses', () => {
       const notObject = ['should', 'be', 'object'];
-      expect(() => TeamDynamixSingleResponseSchema.parse(notObject)).toThrow('Expected object');
+      expect(() => TeamDynamixSingleResponseSchema.parse(notObject)).toThrow('expected record');
     });
 
     it('should reject null as single response', () => {
-      expect(() => TeamDynamixSingleResponseSchema.parse(null)).toThrow('Expected object');
+      expect(() => TeamDynamixSingleResponseSchema.parse(null)).toThrow('expected record');
     });
 
     it('should allow objects with any field types', () => {
