@@ -6,128 +6,149 @@ Current TeamDynamix MCP tool catalog.
 
 ## Response conventions
 
-- Most tools support `response_format` with values:
+- All gateway tools support `response_format` with values:
   - `"markdown"` (default)
   - `"json"`
-- TeamDynamix domain tools use the `teamdynamix_` prefix.
+- TeamDynamix gateway tools use the `teamdynamix_` prefix.
+- Gateway tools accept:
+  - `action` (domain-specific operation)
+  - `payload` (object containing action parameters)
+  - `response_format`
 
-## Discovery tools (4)
-
-| Tool | Type |
-| --- | --- |
-| `teamdynamix_server_status` | read |
-| `teamdynamix_get_current_user` | read |
-| `teamdynamix_list_applications` | read |
-| `teamdynamix_list_ticket_statuses` | read |
-
-## Ticket tools (11)
+## Exposed gateway tools (11)
 
 | Tool | Type |
 | --- | --- |
-| `teamdynamix_list_ticket_types` | read |
-| `teamdynamix_list_ticket_priorities` | read |
-| `teamdynamix_list_ticket_urgencies` | read |
-| `teamdynamix_list_ticket_impacts` | read |
-| `teamdynamix_list_ticket_sources` | read |
-| `teamdynamix_get_ticket` | read |
-| `teamdynamix_search_tickets` | read |
-| `teamdynamix_create_ticket` | write |
-| `teamdynamix_update_ticket` | write |
-| `teamdynamix_add_ticket_comment` | write |
-| `teamdynamix_get_ticket_feed` | read |
+| `teamdynamix_discovery` | mixed (read actions) |
+| `teamdynamix_tickets` | mixed (read/write actions) |
+| `teamdynamix_ticket_relationships` | mixed (read/write/destructive actions) |
+| `teamdynamix_people` | mixed (read actions) |
+| `teamdynamix_knowledge_base` | mixed (read/write actions) |
+| `teamdynamix_assets` | mixed (read actions) |
+| `teamdynamix_cmdb` | mixed (read actions) |
+| `teamdynamix_services` | mixed (read actions) |
+| `teamdynamix_projects` | mixed (read/write actions) |
+| `teamdynamix_time` | mixed (read actions) |
+| `teamdynamix_reference_data` | mixed (read actions) |
 
-## Ticket task/contact/asset relationship tools (8)
-
-| Tool | Type |
-| --- | --- |
-| `teamdynamix_get_ticket_tasks` | read |
-| `teamdynamix_create_ticket_task` | write |
-| `teamdynamix_list_ticket_assets` | read |
-| `teamdynamix_add_ticket_asset` | write |
-| `teamdynamix_remove_ticket_asset` | destructive (confirm required) |
-| `teamdynamix_get_ticket_contacts` | read |
-| `teamdynamix_add_ticket_contact` | write |
-| `teamdynamix_remove_ticket_contact` | destructive (confirm required) |
-
-## People tools (5)
+## Discovery gateway actions (`teamdynamix_discovery`)
 
 | Tool | Type |
 | --- | --- |
-| `teamdynamix_get_user` | read |
-| `teamdynamix_search_users` | read |
-| `teamdynamix_get_group` | read |
-| `teamdynamix_search_groups` | read |
-| `teamdynamix_get_group_members` | read |
+| `server_status` | read |
+| `get_current_user` | read |
+| `list_applications` | read |
+| `list_ticket_statuses` | read |
 
-## Knowledge Base tools (5)
-
-| Tool | Type |
-| --- | --- |
-| `teamdynamix_get_kb_article` | read |
-| `teamdynamix_search_kb_articles` | read |
-| `teamdynamix_list_kb_categories` | read |
-| `teamdynamix_create_kb_article` | write |
-| `teamdynamix_update_kb_article` | write |
-
-## Asset tools (4)
+## Tickets gateway actions (`teamdynamix_tickets`)
 
 | Tool | Type |
 | --- | --- |
-| `teamdynamix_get_asset` | read |
-| `teamdynamix_search_assets` | read |
-| `teamdynamix_list_asset_statuses` | read |
-| `teamdynamix_list_product_models` | read |
+| `list_ticket_types` | read |
+| `list_ticket_priorities` | read |
+| `list_ticket_urgencies` | read |
+| `list_ticket_impacts` | read |
+| `list_ticket_sources` | read |
+| `get_ticket` | read |
+| `search_tickets` | read |
+| `create_ticket` | write |
+| `update_ticket` | write |
+| `add_ticket_comment` | write |
+| `get_ticket_feed` | read |
 
-## CMDB tools (5)
-
-| Tool | Type |
-| --- | --- |
-| `teamdynamix_get_ci` | read |
-| `teamdynamix_search_cis` | read |
-| `teamdynamix_list_ci_types` | read |
-| `teamdynamix_list_ci_relationship_types` | read |
-| `teamdynamix_list_vendors` | read |
-
-## Service catalog tools (4)
+## Ticket relationships gateway actions (`teamdynamix_ticket_relationships`)
 
 | Tool | Type |
 | --- | --- |
-| `teamdynamix_list_services` | read |
-| `teamdynamix_get_service` | read |
-| `teamdynamix_search_services` | read |
-| `teamdynamix_list_service_categories` | read |
+| `get_ticket_tasks` | read |
+| `create_ticket_task` | write |
+| `list_ticket_assets` | read |
+| `add_ticket_asset` | write |
+| `remove_ticket_asset` | destructive (confirm required) |
+| `get_ticket_contacts` | read |
+| `add_ticket_contact` | write |
+| `remove_ticket_contact` | destructive (confirm required) |
 
-## Project tools (8)
-
-| Tool | Type |
-| --- | --- |
-| `teamdynamix_get_project` | read |
-| `teamdynamix_search_projects` | read |
-| `teamdynamix_list_project_types` | read |
-| `teamdynamix_get_project_plans` | read |
-| `teamdynamix_get_project_issues` | read |
-| `teamdynamix_get_project_risks` | read |
-| `teamdynamix_create_project_issue` | write |
-| `teamdynamix_create_project_risk` | write |
-
-## Time tools (2)
+## People gateway actions (`teamdynamix_people`)
 
 | Tool | Type |
 | --- | --- |
-| `teamdynamix_list_time_types` | read |
-| `teamdynamix_get_my_time_entries` | read |
+| `get_user` | read |
+| `search_users` | read |
+| `get_group` | read |
+| `search_groups` | read |
+| `get_group_members` | read |
 
-## Enumeration tools (5)
+## Knowledge Base gateway actions (`teamdynamix_knowledge_base`)
 
 | Tool | Type |
 | --- | --- |
-| `teamdynamix_list_accounts` | read |
-| `teamdynamix_get_account` | read |
-| `teamdynamix_list_locations` | read |
-| `teamdynamix_list_functional_roles` | read |
-| `teamdynamix_list_custom_attributes` | read |
+| `get_kb_article` | read |
+| `search_kb_articles` | read |
+| `list_kb_categories` | read |
+| `create_kb_article` | write |
+| `update_kb_article` | write |
+
+## Assets gateway actions (`teamdynamix_assets`)
+
+| Tool | Type |
+| --- | --- |
+| `get_asset` | read |
+| `search_assets` | read |
+| `list_asset_statuses` | read |
+| `list_product_models` | read |
+
+## CMDB gateway actions (`teamdynamix_cmdb`)
+
+| Tool | Type |
+| --- | --- |
+| `get_ci` | read |
+| `search_cis` | read |
+| `list_ci_types` | read |
+| `list_ci_relationship_types` | read |
+| `list_vendors` | read |
+
+## Services gateway actions (`teamdynamix_services`)
+
+| Tool | Type |
+| --- | --- |
+| `list_services` | read |
+| `get_service` | read |
+| `search_services` | read |
+| `list_service_categories` | read |
+
+## Projects gateway actions (`teamdynamix_projects`)
+
+| Tool | Type |
+| --- | --- |
+| `get_project` | read |
+| `search_projects` | read |
+| `list_project_types` | read |
+| `get_project_plans` | read |
+| `get_project_issues` | read |
+| `get_project_risks` | read |
+| `create_project_issue` | write |
+| `create_project_risk` | write |
+
+## Time gateway actions (`teamdynamix_time`)
+
+| Tool | Type |
+| --- | --- |
+| `list_time_types` | read |
+| `get_my_time_entries` | read |
+
+## Reference data gateway actions (`teamdynamix_reference_data`)
+
+| Tool | Type |
+| --- | --- |
+| `list_accounts` | read |
+| `get_account` | read |
+| `list_locations` | read |
+| `list_functional_roles` | read |
+| `list_custom_attributes` | read |
 
 ## Safety implications
 
-- All `write` and `destructive` tools require `TEAMDYNAMIX_ENABLE_WRITE_TOOLS=true`.
+- All `write` and `destructive` actions require
+  `TEAMDYNAMIX_ENABLE_WRITE_TOOLS=true`.
 - Destructive unlink operations also require `confirm: true`.

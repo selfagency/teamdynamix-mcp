@@ -10,7 +10,7 @@ title: Architecture
 │               (StdioServerTransport)                         │
 ├──────────────────────────────────────────────────────────────┤
 │                    Tool Handlers                             │  src/tools/*.tools.ts
-│          (Zod validation, safety guards, routing)            │
+│      (Gateway action validation, safety guards, routing)     │
 ├──────────────────────────────────────────────────────────────┤
 │             TeamDynamixClient (HTTP + auth)                  │  src/services/teamdynamix/client.service.ts
 │          Core helpers (dates, patch, rate limit)             │  src/services/teamdynamix/core.service.ts
@@ -21,22 +21,23 @@ title: Architecture
 
 ```text
 src/
-├── index.ts                         # MCP entry point — registers all tool families
+├── index.ts                         # MCP entry point — registers all gateway tool families
 ├── config.ts                        # TeamDynamix + MCP env var parsing
 ├── constants.ts                     # Shared constants (tool prefix, character limits)
 ├── types.ts                         # Shared TypeScript types (auth config, request options)
 ├── schemas/
 │   └── teamdynamix/index.ts         # All Zod input schemas (tickets, KB, assets, CI, projects …)
 ├── tools/
-│   ├── teamdynamix.discovery.tools.ts     # server_status, get_current_user, list_applications (4 tools)
-│   ├── teamdynamix.tickets.tools.ts       # Ticket CRUD + metadata (11 tools)
-│   ├── teamdynamix.ticket-tasks.tools.ts  # Ticket tasks, asset links, contacts (8 tools)
-│   ├── teamdynamix.people.tools.ts        # Users + groups (5 tools)
-│   ├── teamdynamix.kb.tools.ts            # KB CRUD + search (5 tools)
-│   ├── teamdynamix.assets.tools.ts        # Asset get/search/metadata (4 tools)
-│   ├── teamdynamix.services.tools.ts      # Service catalog + Projects + Time (13 tools)
-│   ├── teamdynamix.cmdb.tools.ts          # CI/CMDB + vendors (5 tools)
-│   └── teamdynamix.enumeration.tools.ts   # Accounts, locations, roles, attributes (5 tools)
+│   ├── teamdynamix.domain-gateways.tools.ts  # Domain gateway registrations + action routing
+│   ├── teamdynamix.discovery.tools.ts        # Legacy direct tool module (kept for compatibility tests)
+│   ├── teamdynamix.tickets.tools.ts          # Legacy direct tool module
+│   ├── teamdynamix.ticket-tasks.tools.ts     # Legacy direct tool module
+│   ├── teamdynamix.people.tools.ts           # Legacy direct tool module
+│   ├── teamdynamix.kb.tools.ts               # Legacy direct tool module
+│   ├── teamdynamix.assets.tools.ts           # Legacy direct tool module
+│   ├── teamdynamix.services.tools.ts         # Legacy direct tool module
+│   ├── teamdynamix.cmdb.tools.ts             # Legacy direct tool module
+│   └── teamdynamix.enumeration.tools.ts      # Legacy direct tool module
 ├── services/
 │   ├── teamdynamix/
 │   │   ├── client.service.ts        # TeamDynamixClient — HTTP, auth, retry, safety guards
@@ -51,18 +52,36 @@ src/
 ### Transport layer (`src/index.ts`)
 
 - Creates the MCP server instance using `@modelcontextprotocol/sdk`
-- Imports and calls each `register*Tools` function for every domain
+- Imports and calls `registerTeamDynamixDomainGatewayTools`
 - Registers MCP resources
 - Starts `StdioServerTransport`
 
 ### Tool handlers (`src/tools/*.tools.ts`)
 
-- Accept raw MCP tool call inputs
-- Validate parameters with Zod schemas
+- Accept domain gateway inputs (`action`, `payload`, `response_format`)
+- Validate `payload` per action with Zod schemas
 - Call `assertWriteToolsEnabled` or `assertAdminToolsEnabled` before mutating operations
 - Delegate to `TeamDynamixClient` methods
 - Format and return the response
 - Keep behavior thin and predictable
+
+### Gateway model
+
+The exposed MCP surface is intentionally reduced to domain gateways:
+
+- `teamdynamix_discovery`
+- `teamdynamix_tickets`
+- `teamdynamix_ticket_relationships`
+- `teamdynamix_people`
+- `teamdynamix_knowledge_base`
+- `teamdynamix_assets`
+- `teamdynamix_cmdb`
+- `teamdynamix_services`
+- `teamdynamix_projects`
+- `teamdynamix_time`
+- `teamdynamix_reference_data`
+
+Each gateway routes named actions to the underlying client methods.
 
 ### TeamDynamixClient (`src/services/teamdynamix/client.service.ts`)
 

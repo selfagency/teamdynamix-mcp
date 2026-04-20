@@ -1,6 +1,7 @@
 import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { getTeamDynamixConfig, getTeamDynamixConfigStatus } from '../config.js';
 import { redactTeamDynamixConfig } from '../services/teamdynamix/core.service.js';
+import { TEAMDYNAMIX_GATEWAY_SURFACE } from '../tools/teamdynamix.domain-gateways.tools.js';
 
 function stringify(data: unknown): string {
   return JSON.stringify(data, null, 2);
@@ -20,86 +21,30 @@ export function registerTeamDynamixResources(server: McpServer): void {
     async uri => {
       const capabilities = {
         toolGroups: {
-          discovery: [
-            'teamdynamix_server_status',
-            'teamdynamix_get_current_user',
-            'teamdynamix_list_applications',
-            'teamdynamix_list_ticket_statuses',
-          ],
-          tickets: [
-            'teamdynamix_list_ticket_types',
-            'teamdynamix_list_ticket_priorities',
-            'teamdynamix_list_ticket_urgencies',
-            'teamdynamix_list_ticket_impacts',
-            'teamdynamix_list_ticket_sources',
-            'teamdynamix_get_ticket',
-            'teamdynamix_search_tickets',
-            'teamdynamix_create_ticket',
-            'teamdynamix_update_ticket',
-            'teamdynamix_add_ticket_comment',
-            'teamdynamix_get_ticket_feed',
-          ],
-          ticketRelationships: [
-            'teamdynamix_get_ticket_tasks',
-            'teamdynamix_create_ticket_task',
-            'teamdynamix_list_ticket_assets',
-            'teamdynamix_add_ticket_asset',
-            'teamdynamix_remove_ticket_asset',
-            'teamdynamix_get_ticket_contacts',
-            'teamdynamix_add_ticket_contact',
-            'teamdynamix_remove_ticket_contact',
-          ],
-          people: [
-            'teamdynamix_get_user',
-            'teamdynamix_search_users',
-            'teamdynamix_get_group',
-            'teamdynamix_search_groups',
-            'teamdynamix_get_group_members',
-          ],
-          knowledgeBase: [
-            'teamdynamix_get_kb_article',
-            'teamdynamix_search_kb_articles',
-            'teamdynamix_list_kb_categories',
-            'teamdynamix_create_kb_article',
-            'teamdynamix_update_kb_article',
-          ],
-          assets: [
-            'teamdynamix_get_asset',
-            'teamdynamix_search_assets',
-            'teamdynamix_list_asset_statuses',
-            'teamdynamix_list_product_models',
-          ],
-          cmdb: [
-            'teamdynamix_get_ci',
-            'teamdynamix_search_cis',
-            'teamdynamix_list_ci_types',
-            'teamdynamix_list_ci_relationship_types',
-            'teamdynamix_list_vendors',
-          ],
-          services: [
-            'teamdynamix_list_services',
-            'teamdynamix_get_service',
-            'teamdynamix_search_services',
-            'teamdynamix_list_service_categories',
-          ],
-          projects: [
-            'teamdynamix_get_project',
-            'teamdynamix_search_projects',
-            'teamdynamix_list_project_types',
-            'teamdynamix_get_project_plans',
-            'teamdynamix_get_project_issues',
-            'teamdynamix_get_project_risks',
-            'teamdynamix_create_project_issue',
-            'teamdynamix_create_project_risk',
-          ],
-          time: ['teamdynamix_list_time_types', 'teamdynamix_get_my_time_entries'],
-          enumeration: [
-            'teamdynamix_list_accounts',
-            'teamdynamix_get_account',
-            'teamdynamix_list_locations',
-            'teamdynamix_list_functional_roles',
-            'teamdynamix_list_custom_attributes',
-          ],
+          discovery: [TEAMDYNAMIX_GATEWAY_SURFACE.discovery.tool],
+          tickets: [TEAMDYNAMIX_GATEWAY_SURFACE.tickets.tool],
+          ticketRelationships: [TEAMDYNAMIX_GATEWAY_SURFACE.ticketRelationships.tool],
+          people: [TEAMDYNAMIX_GATEWAY_SURFACE.people.tool],
+          knowledgeBase: [TEAMDYNAMIX_GATEWAY_SURFACE.knowledgeBase.tool],
+          assets: [TEAMDYNAMIX_GATEWAY_SURFACE.assets.tool],
+          cmdb: [TEAMDYNAMIX_GATEWAY_SURFACE.cmdb.tool],
+          services: [TEAMDYNAMIX_GATEWAY_SURFACE.services.tool],
+          projects: [TEAMDYNAMIX_GATEWAY_SURFACE.projects.tool],
+          time: [TEAMDYNAMIX_GATEWAY_SURFACE.time.tool],
+          referenceData: [TEAMDYNAMIX_GATEWAY_SURFACE.referenceData.tool],
+        },
+        gatewayActions: {
+          discovery: TEAMDYNAMIX_GATEWAY_SURFACE.discovery.actions,
+          tickets: TEAMDYNAMIX_GATEWAY_SURFACE.tickets.actions,
+          ticketRelationships: TEAMDYNAMIX_GATEWAY_SURFACE.ticketRelationships.actions,
+          people: TEAMDYNAMIX_GATEWAY_SURFACE.people.actions,
+          knowledgeBase: TEAMDYNAMIX_GATEWAY_SURFACE.knowledgeBase.actions,
+          assets: TEAMDYNAMIX_GATEWAY_SURFACE.assets.actions,
+          cmdb: TEAMDYNAMIX_GATEWAY_SURFACE.cmdb.actions,
+          services: TEAMDYNAMIX_GATEWAY_SURFACE.services.actions,
+          projects: TEAMDYNAMIX_GATEWAY_SURFACE.projects.actions,
+          time: TEAMDYNAMIX_GATEWAY_SURFACE.time.actions,
+          referenceData: TEAMDYNAMIX_GATEWAY_SURFACE.referenceData.actions,
         },
         implementedDomains: [
           'discovery',
@@ -112,7 +57,7 @@ export function registerTeamDynamixResources(server: McpServer): void {
           'services',
           'projects',
           'time',
-          'enumeration',
+          'reference_data',
         ],
       };
 

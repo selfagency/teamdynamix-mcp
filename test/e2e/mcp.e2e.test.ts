@@ -100,20 +100,21 @@ describe('MCP server E2E - tools/list', () => {
     expect(response.error).toBeUndefined();
     const result = response.result as { tools: Array<{ name: string }> };
     const names = result.tools.map((t: { name: string }) => t.name);
-    expect(names).toContain('teamdynamix_server_status');
-    expect(names).toContain('teamdynamix_get_current_user');
-    expect(names).toContain('teamdynamix_list_applications');
-    expect(names).toContain('teamdynamix_create_ticket');
-    expect(names).toContain('teamdynamix_search_kb_articles');
-    expect(names).toContain('teamdynamix_get_asset');
-    expect(names).toContain('teamdynamix_search_cis');
-    expect(names).toContain('teamdynamix_search_users');
-    expect(names).toContain('teamdynamix_get_project');
-    expect(names).toContain('teamdynamix_list_accounts');
+    expect(names).toContain('teamdynamix_discovery');
+    expect(names).toContain('teamdynamix_tickets');
+    expect(names).toContain('teamdynamix_ticket_relationships');
+    expect(names).toContain('teamdynamix_people');
+    expect(names).toContain('teamdynamix_knowledge_base');
+    expect(names).toContain('teamdynamix_assets');
+    expect(names).toContain('teamdynamix_cmdb');
+    expect(names).toContain('teamdynamix_services');
+    expect(names).toContain('teamdynamix_projects');
+    expect(names).toContain('teamdynamix_time');
+    expect(names).toContain('teamdynamix_reference_data');
   });
 });
 
-describe('MCP server E2E - teamdynamix_server_status', () => {
+describe('MCP server E2E - teamdynamix_discovery server_status action', () => {
   it('returns status even when not configured', async () => {
     const id = nextId();
     writeRequest(server, {
@@ -121,8 +122,12 @@ describe('MCP server E2E - teamdynamix_server_status', () => {
       id,
       method: 'tools/call',
       params: {
-        name: 'teamdynamix_server_status',
-        arguments: { response_format: 'json' },
+        name: 'teamdynamix_discovery',
+        arguments: {
+          action: 'server_status',
+          payload: {},
+          response_format: 'json',
+        },
       },
     });
 
@@ -130,8 +135,9 @@ describe('MCP server E2E - teamdynamix_server_status', () => {
     expect(response.error).toBeUndefined();
     const result = response.result as { content: Array<{ type: string; text: string }> };
     expect(result.content[0].type).toBe('text');
-    const parsed = JSON.parse(result.content[0].text) as { discoveryTools: unknown };
-    expect(parsed.discoveryTools).toBeDefined();
+    const parsed = JSON.parse(result.content[0].text) as { gateway: string; actions: unknown };
+    expect(parsed.gateway).toBe('discovery');
+    expect(parsed.actions).toBeDefined();
   });
 });
 
