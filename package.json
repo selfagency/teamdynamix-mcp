@@ -1,6 +1,7 @@
 {
   "name": "@selfagency/teamdynamix-mcp",
   "version": "0.1.0",
+  "private": false,
   "description": "A production-ready TypeScript MCP server for TeamDynamix",
   "keywords": [
     "mcp",
