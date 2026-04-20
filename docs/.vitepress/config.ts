@@ -1,10 +1,10 @@
 import { defineConfig } from 'vitepress';
 
-const SITE_URL = 'https://example.com/mcp-server-template';
+const SITE_URL = 'https://github.com/selfagency/teamdynamix-mcp';
 
 export default defineConfig({
-  title: 'mcp-server-template',
-  description: 'A production-grade TypeScript template for building MCP servers',
+  title: 'teamdynamix-mcp',
+  description: 'A TeamDynamix ITSM Model Context Protocol server with safety-gated write operations',
   lang: 'en-US',
   base: '/',
 
@@ -16,13 +16,13 @@ export default defineConfig({
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],
     ['meta', { name: 'theme-color', content: '#2563eb' }],
     ['meta', { property: 'og:type', content: 'website' }],
-    ['meta', { property: 'og:title', content: 'mcp-server-template' }],
+    ['meta', { property: 'og:title', content: 'teamdynamix-mcp' }],
     ['meta', { property: 'og:url', content: SITE_URL }],
     [
       'meta',
       {
         property: 'og:description',
-        content: 'A production-grade TypeScript template for building MCP servers',
+        content: 'A TeamDynamix ITSM Model Context Protocol server with safety-gated write operations',
       },
     ],
   ],
@@ -31,36 +31,69 @@ export default defineConfig({
     logo: '/logo.svg',
 
     nav: [
-      { text: 'Guide', link: '/guide/getting-started' },
-      { text: 'Tools', link: '/tools/' },
+      { text: 'Tutorials', link: '/tutorials/' },
+      { text: 'How-to', link: '/how-to/' },
+      { text: 'Reference', link: '/reference/' },
+      { text: 'Explanation', link: '/explanation/' },
       { text: 'Developer', link: '/development/architecture' },
       {
-        text: 'v0.1.0',
+        text: 'Repository',
         items: [
-          { text: 'Changelog', link: 'https://github.com/selfagency/mcp-server-template/releases' },
+          { text: 'GitHub', link: 'https://github.com/selfagency/teamdynamix-mcp' },
+          { text: 'Changelog', link: 'https://github.com/selfagency/teamdynamix-mcp/releases' },
           { text: 'Contributing', link: '/development/contributing' },
         ],
       },
     ],
 
     sidebar: {
-      '/guide/': [
+      '/tutorials/': [
         {
-          text: 'Guide',
+          text: 'Tutorials',
           items: [
-            { text: 'Getting Started', link: '/guide/getting-started' },
-            { text: 'Configuration', link: '/guide/configuration' },
-            { text: 'MCP Resources', link: '/guide/resources' },
-            { text: 'Safety & Permissions', link: '/guide/safety' },
+            { text: 'Overview', link: '/tutorials/' },
+            { text: 'Getting Started', link: '/tutorials/getting-started' },
+            { text: 'First Ticket Workflow', link: '/tutorials/first-ticket-workflow' },
+            { text: 'First KB Workflow', link: '/tutorials/first-kb-workflow' },
           ],
         },
       ],
-      '/tools/': [
+      '/how-to/': [
         {
-          text: 'Tool Reference',
+          text: 'How-to Guides',
           items: [
-            { text: 'Overview', link: '/tools/' },
-            { text: 'Utility Tools', link: '/tools/utility' },
+            { text: 'Overview', link: '/how-to/' },
+            { text: 'Create and Update Tickets', link: '/how-to/tickets' },
+            { text: 'Ticket Tasks, Contacts, Assets', link: '/how-to/ticket-relationships' },
+            { text: 'KB Authoring', link: '/how-to/knowledge-base' },
+            { text: 'Search Assets, CIs, Services, Projects', link: '/how-to/discovery-and-search' },
+            { text: 'Troubleshooting Errors', link: '/how-to/troubleshooting' },
+          ],
+        },
+      ],
+      '/reference/': [
+        {
+          text: 'Reference',
+          items: [
+            { text: 'Overview', link: '/reference/' },
+            { text: 'Configuration', link: '/reference/configuration' },
+            { text: 'Tool Catalog', link: '/reference/tools' },
+            { text: 'Safety', link: '/reference/safety' },
+            { text: 'Resources', link: '/reference/resources' },
+            { text: 'Errors', link: '/reference/errors' },
+            { text: 'Skill and Agent Definitions', link: '/reference/skill-and-agent-definitions' },
+          ],
+        },
+      ],
+      '/explanation/': [
+        {
+          text: 'Explanation',
+          items: [
+            { text: 'Overview', link: '/explanation/' },
+            { text: 'Architecture', link: '/explanation/architecture' },
+            { text: 'Auth and Safety Model', link: '/explanation/auth-and-safety' },
+            { text: 'Domain and Data Model', link: '/explanation/domain-model' },
+            { text: 'Rate Limiting and Retries', link: '/explanation/rate-limits-and-retries' },
           ],
         },
       ],
@@ -76,7 +109,7 @@ export default defineConfig({
       ],
     },
 
-    socialLinks: [{ icon: 'github', link: 'https://github.com/selfagency/mcp-server-template' }],
+    socialLinks: [{ icon: 'github', link: 'https://github.com/selfagency/teamdynamix-mcp' }],
 
     footer: {
       message: 'Released under the MIT License.',
@@ -88,7 +121,7 @@ export default defineConfig({
     },
 
     editLink: {
-      pattern: 'https://github.com/selfagency/mcp-server-template/edit/main/docs/:path',
+      pattern: 'https://github.com/selfagency/teamdynamix-mcp/edit/main/docs/:path',
       text: 'Edit this page on GitHub',
     },
   },

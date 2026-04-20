@@ -2,7 +2,7 @@
 title: Testing
 ---
 
-`mcp-server-template` uses [Vitest](https://vitest.dev/) for unit, integration, and e2e tests.
+`teamdynamix-mcp` uses [Vitest](https://vitest.dev/) for unit, integration, and e2e tests.
 
 ## Running Tests
 

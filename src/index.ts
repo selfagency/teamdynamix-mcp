@@ -1,51 +1,50 @@
 #!/usr/bin/env node
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { z } from 'zod';
-import { DEFAULT_BASE_PATH, LOG_LEVEL, SERVER_NAME_OVERRIDE, SERVER_VERSION_OVERRIDE } from './config.js';
+import { LOG_LEVEL, SERVER_NAME_OVERRIDE, SERVER_VERSION_OVERRIDE, getTeamDynamixConfig } from './config.js';
 import { SERVER_NAME, SERVER_VERSION } from './constants.js';
-import { registerTemplateResources } from './resources/template.resources.js';
-import { registerUtilityTools } from './tools/utility.tools.js';
+import { registerTeamDynamixResources } from './resources/teamdynamix.resources.js';
+import { redactTeamDynamixConfig } from './services/teamdynamix/core.service.js';
+import { registerTeamDynamixAssetTools } from './tools/teamdynamix.assets.tools.js';
+import { registerTeamDynamixCmdbTools } from './tools/teamdynamix.cmdb.tools.js';
+import { registerTeamDynamixDiscoveryTools } from './tools/teamdynamix.discovery.tools.js';
+import { registerTeamDynamixEnumerationTools } from './tools/teamdynamix.enumeration.tools.js';
+import { registerTeamDynamixKbTools } from './tools/teamdynamix.kb.tools.js';
+import { registerTeamDynamixPeopleTools } from './tools/teamdynamix.people.tools.js';
+import {
+  registerTeamDynamixProjectTools,
+  registerTeamDynamixServiceCatalogTools,
+} from './tools/teamdynamix.services.tools.js';
+import {
+  registerTeamDynamixTicketContactTools,
+  registerTeamDynamixTicketTaskTools,
+} from './tools/teamdynamix.ticket-tasks.tools.js';
+import { registerTeamDynamixTicketTools } from './tools/teamdynamix.tickets.tools.js';
 
 const server = new McpServer({
   name: SERVER_NAME_OVERRIDE ?? SERVER_NAME,
   version: SERVER_VERSION_OVERRIDE ?? SERVER_VERSION,
 });
 
-registerUtilityTools(server);
-registerTemplateResources(server);
-
-server.registerTool(
-  'template_ping',
-  {
-    title: 'Template Ping',
-    description: 'Returns a simple response to verify the server is running.',
-    inputSchema: {
-      message: z.string().default('pong'),
-    },
-    annotations: {
-      readOnlyHint: true,
-      idempotentHint: true,
-      destructiveHint: false,
-      openWorldHint: false,
-    },
-  },
-  async ({ message }: { message: string }) => {
-    return {
-      content: [{ type: 'text', text: `${SERVER_NAME_OVERRIDE ?? SERVER_NAME}: ${message}` }],
-      structuredContent: {
-        ok: true,
-        message,
-      },
-    };
-  },
-);
+registerTeamDynamixDiscoveryTools(server);
+registerTeamDynamixTicketTools(server);
+registerTeamDynamixPeopleTools(server);
+registerTeamDynamixKbTools(server);
+registerTeamDynamixAssetTools(server);
+registerTeamDynamixServiceCatalogTools(server);
+registerTeamDynamixProjectTools(server);
+registerTeamDynamixEnumerationTools(server);
+registerTeamDynamixTicketTaskTools(server);
+registerTeamDynamixTicketContactTools(server);
+registerTeamDynamixCmdbTools(server);
+registerTeamDynamixResources(server);
 
 async function main(): Promise<void> {
-  if (DEFAULT_BASE_PATH) {
-    console.error(`[mcp-template] default base path: ${DEFAULT_BASE_PATH}`);
+  console.error(`[teamdynamix-mcp] log level: ${LOG_LEVEL}`);
+  if (LOG_LEVEL === 'debug') {
+    const config = getTeamDynamixConfig();
+    console.error(`[teamdynamix-mcp] sanitized config: ${JSON.stringify(redactTeamDynamixConfig(config))}`);
   }
-  console.error(`[mcp-template] log level: ${LOG_LEVEL}`);
   const transport = new StdioServerTransport();
   await server.connect(transport);
 }

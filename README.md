@@ -1,47 +1,63 @@
-# mcp-server-template
+# teamdynamix-mcp
 
-A production-ready TypeScript template for building Model Context Protocol (MCP) servers.
+`teamdynamix-mcp` is a TypeScript Model Context Protocol (MCP) server that exposes TeamDynamix ITSM capabilities as agent-callable tools.
 
-## What you get
+It is designed for AI agent builders using MCP clients (VS Code, Claude Desktop, MCP Inspector) who need safe, structured access to:
 
-- Stdio-first MCP server bootstrap with `McpServer`
-- Utility starter tools with Zod schema validation
-- Read-only template resources for capability/config inspection
-- Strict TypeScript setup, build/lint/test scripts, and VitePress docs
+- tickets and ticket metadata
+- knowledge base articles
+- assets and CMDB configuration items
+- users, groups, accounts, locations, and custom attributes
+- service catalog, projects, and time entries
 
 ## Quick start
 
-1. Install dependencies.
-2. Start in development mode.
-3. Connect with MCP Inspector or your MCP client.
+```sh
+pnpm install
+cp .env.example .env
+pnpm dev
+```
 
-### Development
+Example MCP client configuration (stdio transport):
 
-- `pnpm dev` — run with `tsx` watch mode
-- `pnpm build` — bundle to `dist/`
-- `pnpm start` — run built server
+```json
+{
+  "command": "node",
+  "args": ["--import", "tsx/esm", "src/index.ts"]
+}
+```
 
-### MCP Inspector
+Verify connectivity by calling `teamdynamix_server_status` with `response_format: "json"` from your MCP client.
 
-Use Inspector to connect to the stdio server:
+## Safety defaults
 
-- command: `node`
-- args: `--import tsx/esm src/index.ts`
+- Write tools are disabled by default (`TEAMDYNAMIX_ENABLE_WRITE_TOOLS=false`)
+- Admin tools are disabled by default (`TEAMDYNAMIX_ENABLE_ADMIN_TOOLS=false`)
+- Destructive unlink operations require explicit `confirm: true`
+- Inputs are validated with Zod before API calls
+- 429 responses are retried with rate-limit-aware waiting
 
-You can then call starter tools:
+## Documentation
 
-- `template_ping`
-- `echo`
-- `text_transform`
-- `current_time`
-- `system_info`
+- Start here: [docs/index.md](docs/index.md)
+- Tutorials: [docs/tutorials/index.md](docs/tutorials/index.md)
+- How-to guides: [docs/how-to/index.md](docs/how-to/index.md)
+- Reference (exhaustive tools + config): [docs/reference/index.md](docs/reference/index.md)
+- Explanation (architecture and safety rationale): [docs/explanation/index.md](docs/explanation/index.md)
+- Development docs: [docs/development/architecture.md](docs/development/architecture.md)
 
-## Environment variables
+## Skills and agent definitions
 
-- `MCP_BASE_PATH` — optional default base path for tool operations
-- `MCP_SERVER_NAME` — optional server name override
-- `MCP_SERVER_VERSION` — optional server version override
-- `MCP_LOG_LEVEL` — `debug` | `info` | `warn` | `error`
+- Skill: [skills/teamdynamix/SKILL.md](skills/teamdynamix/SKILL.md)
+- Agent prompt: [prompts/teamdynamix-agent.prompt.md](prompts/teamdynamix-agent.prompt.md)
+
+## Development checks
+
+```sh
+pnpm typecheck
+pnpm lint
+pnpm test
+```
 
 ## License
 

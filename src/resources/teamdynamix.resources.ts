@@ -1,0 +1,145 @@
+import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { getTeamDynamixConfig, getTeamDynamixConfigStatus } from '../config.js';
+import { redactTeamDynamixConfig } from '../services/teamdynamix/core.service.js';
+
+function stringify(data: unknown): string {
+  return JSON.stringify(data, null, 2);
+}
+
+export function registerTeamDynamixResources(server: McpServer): void {
+  const resourceConfig = { list: undefined };
+
+  server.registerResource(
+    'teamdynamix_capabilities',
+    new ResourceTemplate('teamdynamix://capabilities', resourceConfig),
+    {
+      title: 'TeamDynamix Capabilities',
+      description: 'Read-only snapshot of the currently implemented TeamDynamix MCP surface.',
+      mimeType: 'application/json',
+    },
+    async uri => {
+      const capabilities = {
+        toolGroups: {
+          discovery: [
+            'teamdynamix_server_status',
+            'teamdynamix_get_current_user',
+            'teamdynamix_list_applications',
+            'teamdynamix_list_ticket_statuses',
+          ],
+          tickets: [
+            'teamdynamix_list_ticket_types',
+            'teamdynamix_list_ticket_priorities',
+            'teamdynamix_list_ticket_urgencies',
+            'teamdynamix_list_ticket_impacts',
+            'teamdynamix_list_ticket_sources',
+            'teamdynamix_get_ticket',
+            'teamdynamix_search_tickets',
+            'teamdynamix_create_ticket',
+            'teamdynamix_update_ticket',
+            'teamdynamix_add_ticket_comment',
+            'teamdynamix_get_ticket_feed',
+          ],
+          ticketRelationships: [
+            'teamdynamix_get_ticket_tasks',
+            'teamdynamix_create_ticket_task',
+            'teamdynamix_list_ticket_assets',
+            'teamdynamix_add_ticket_asset',
+            'teamdynamix_remove_ticket_asset',
+            'teamdynamix_get_ticket_contacts',
+            'teamdynamix_add_ticket_contact',
+            'teamdynamix_remove_ticket_contact',
+          ],
+          people: [
+            'teamdynamix_get_user',
+            'teamdynamix_search_users',
+            'teamdynamix_get_group',
+            'teamdynamix_search_groups',
+            'teamdynamix_get_group_members',
+          ],
+          knowledgeBase: [
+            'teamdynamix_get_kb_article',
+            'teamdynamix_search_kb_articles',
+            'teamdynamix_list_kb_categories',
+            'teamdynamix_create_kb_article',
+            'teamdynamix_update_kb_article',
+          ],
+          assets: [
+            'teamdynamix_get_asset',
+            'teamdynamix_search_assets',
+            'teamdynamix_list_asset_statuses',
+            'teamdynamix_list_product_models',
+          ],
+          cmdb: [
+            'teamdynamix_get_ci',
+            'teamdynamix_search_cis',
+            'teamdynamix_list_ci_types',
+            'teamdynamix_list_ci_relationship_types',
+            'teamdynamix_list_vendors',
+          ],
+          services: [
+            'teamdynamix_list_services',
+            'teamdynamix_get_service',
+            'teamdynamix_search_services',
+            'teamdynamix_list_service_categories',
+          ],
+          projects: [
+            'teamdynamix_get_project',
+            'teamdynamix_search_projects',
+            'teamdynamix_list_project_types',
+            'teamdynamix_get_project_plans',
+            'teamdynamix_get_project_issues',
+            'teamdynamix_get_project_risks',
+            'teamdynamix_create_project_issue',
+            'teamdynamix_create_project_risk',
+          ],
+          time: ['teamdynamix_list_time_types', 'teamdynamix_get_my_time_entries'],
+          enumeration: [
+            'teamdynamix_list_accounts',
+            'teamdynamix_get_account',
+            'teamdynamix_list_locations',
+            'teamdynamix_list_functional_roles',
+            'teamdynamix_list_custom_attributes',
+          ],
+        },
+        implementedDomains: [
+          'discovery',
+          'tickets',
+          'ticket_relationships',
+          'people',
+          'knowledge_base',
+          'assets',
+          'cmdb',
+          'services',
+          'projects',
+          'time',
+          'enumeration',
+        ],
+      };
+
+      return {
+        contents: [{ uri: uri.toString(), mimeType: 'application/json', text: stringify(capabilities) }],
+      };
+    },
+  );
+
+  server.registerResource(
+    'teamdynamix_config',
+    new ResourceTemplate('teamdynamix://config', resourceConfig),
+    {
+      title: 'TeamDynamix Runtime Config',
+      description: 'Read-only sanitized TeamDynamix configuration and readiness metadata.',
+      mimeType: 'application/json',
+    },
+    async uri => {
+      const runtimeConfig = getTeamDynamixConfig();
+      const config = {
+        status: getTeamDynamixConfigStatus(runtimeConfig),
+        config: redactTeamDynamixConfig(runtimeConfig),
+      };
+
+      return {
+        contents: [{ uri: uri.toString(), mimeType: 'application/json', text: stringify(config) }],
+      };
+    },
+  );
+}

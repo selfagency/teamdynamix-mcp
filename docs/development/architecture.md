@@ -2,37 +2,51 @@
 title: Architecture
 ---
 
-`mcp-server-template` is structured as a layered TypeScript application. Each layer has a single responsibility, and dependencies only flow downward.
+`teamdynamix-mcp` is a layered TypeScript MCP server. Each layer has a single responsibility; dependencies only flow downward.
 
 ```text
-┌─────────────────────────────────────┐
-│           MCP Transport             │  src/index.ts
-│       (StdioServerTransport)        │
-├─────────────────────────────────────┤
-│           Tool Handlers             │  src/tools/*.tools.ts
-│      (Zod validation, routing)      │
-├─────────────────────────────────────┤
-│           Services                  │  src/services/*.service.ts
-│      (Domain logic, safety)         │
-└─────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                     MCP Transport                            │  src/index.ts
+│               (StdioServerTransport)                         │
+├──────────────────────────────────────────────────────────────┤
+│                    Tool Handlers                             │  src/tools/*.tools.ts
+│          (Zod validation, safety guards, routing)            │
+├──────────────────────────────────────────────────────────────┤
+│             TeamDynamixClient (HTTP + auth)                  │  src/services/teamdynamix/client.service.ts
+│          Core helpers (dates, patch, rate limit)             │  src/services/teamdynamix/core.service.ts
+└──────────────────────────────────────────────────────────────┘
 ```
 
 ## Directory Structure
 
 ```text
 src/
-├── index.ts                  # MCP server entry point; registers tools and resources
-├── config.ts                 # Environment variable and CLI parsing
-├── constants.ts              # Shared constants (character limits, defaults)
-├── types.ts                  # Shared TypeScript types and DTOs
-├── schemas/                  # Shared Zod schemas
+├── index.ts                         # MCP entry point — registers all tool families
+├── config.ts                        # TeamDynamix + MCP env var parsing
+├── constants.ts                     # Shared constants (tool prefix, character limits)
+├── types.ts                         # Shared TypeScript types (auth config, request options)
+├── schemas/
+│   └── teamdynamix/index.ts         # All Zod input schemas (tickets, KB, assets, CI, projects …)
 ├── tools/
-│   └── utility.tools.ts      # Starter utility tool registrations
+│   ├── teamdynamix.discovery.tools.ts     # server_status, get_current_user, list_applications
+│   ├── teamdynamix.tickets.tools.ts       # Ticket CRUD + metadata (11 tools)
+│   ├── teamdynamix.ticket-tasks.tools.ts  # Ticket tasks, asset links, contacts (8 tools)
+│   ├── teamdynamix.people.tools.ts        # Users + groups (5 tools)
+│   ├── teamdynamix.kb.tools.ts            # KB CRUD + search (5 tools)
+│   ├── teamdynamix.assets.tools.ts        # Asset get/search/metadata (4 tools)
+│   ├── teamdynamix.services.tools.ts      # Service catalog + Projects + Time (13+ tools)
+│   ├── teamdynamix.cmdb.tools.ts          # CI/CMDB + vendors (5 tools)
+│   ├── teamdynamix.enumeration.tools.ts   # Accounts, locations, roles, attributes (5 tools)
+│   └── utility.tools.ts                   # Generic MCP utility tools
 ├── services/
-│   ├── utility.service.ts    # Domain/service helpers for starter tools
-│   └── __tests__/            # Service unit tests
+│   ├── teamdynamix/
+│   │   ├── client.service.ts        # TeamDynamixClient — HTTP, auth, retry, safety guards
+│   │   └── core.service.ts          # Date helpers, JSON Patch builder, rate limit parser, JWT decode
+│   ├── utility.service.ts           # Utility tool helpers
+│   └── __tests__/                   # Service unit tests
 └── resources/
-│   └── template.resources.ts # Starter read-only resources
+	├── teamdynamix.resources.ts      # TeamDynamix MCP resources
+	└── template.resources.ts         # Generic capability/config resources
 ```
 
 ## Layer Responsibilities
@@ -40,32 +54,52 @@ src/
 ### Transport layer (`src/index.ts`)
 
 - Creates the MCP server instance using `@modelcontextprotocol/sdk`
-- Registers all tools by importing tool handler groups
-- Registers all MCP resources
+- Imports and calls each `register*Tools` function for every domain
+- Registers MCP resources
 - Starts `StdioServerTransport`
 
 ### Tool handlers (`src/tools/*.tools.ts`)
 
 - Accept raw MCP tool call inputs
 - Validate parameters with Zod schemas
-- Delegate to the corresponding service function
+- Call `assertWriteToolsEnabled` or `assertAdminToolsEnabled` before mutating operations
+- Delegate to `TeamDynamixClient` methods
 - Format and return the response
 - Keep behavior thin and predictable
 
-### Services (`src/services/*.service.ts`)
+### TeamDynamixClient (`src/services/teamdynamix/client.service.ts`)
 
-- Contain all domain logic
-- Enforce safety constraints and truncation behavior
-- Return typed DTOs or formatted strings
-- **Never import MCP SDK types**
+- Manages bearer token cache (standard and admin) with expiry-aware refresh
+- Retries on transient failures up to `TEAMDYNAMIX_MAX_RETRIES`
+- Parses `X-RateLimit-Reset` and waits at least `TEAMDYNAMIX_MIN_RATE_LIMIT_WAIT_MS` on 429
+- All HTTP methods are typed `Record<string, unknown>` to stay schema-agnostic
+- Exports `assertWriteToolsEnabled` and `assertAdminToolsEnabled` guards
+- **Never imports MCP SDK types**
+
+### Core helpers (`src/services/teamdynamix/core.service.ts`)
+
+- `toTeamDynamixDateTime` / `toTeamDynamixDateOnly` — normalises ISO 8601 to TDX wire format
+- `buildTeamDynamixJsonPatchDocument` — converts user-facing path strings to RFC 6902 `op/path/value` objects
+- `parseRateLimit` — extracts wait duration from rate limit response headers
+- `decodeJwtExpiryEpochSeconds` — reads `exp` claim from TDX JWT to enable proactive token refresh
+- `redactTeamDynamixConfig` — strips secrets before logging the config
 
 ## Schemas
 
-Shared Zod schemas live in `src/schemas/`. Common schemas (response format, path, pagination) are defined once and imported where needed.
+All TeamDynamix Zod schemas live in `src/schemas/teamdynamix/index.ts`. Each domain section is separated by comments. Schemas are imported into tool files and used as `inputSchema` directly.
 
 ## Configuration
 
-`src/config.ts` parses environment variables at startup and exports typed values. Tools import from `config` rather than reading `process.env` directly.
+`src/config.ts` parses environment variables at startup and exports a typed `TeamDynamixConfig`. Tool handlers call `getTeamDynamixConfig()` rather than reading `process.env` directly. The config includes all connection, auth, and safety flag values.
+
+## Safety policy
+
+Two safety guards gate mutating and administrative operations:
+
+- `assertWriteToolsEnabled(config)` — throws unless `enableWriteTools` is `true` (`TEAMDYNAMIX_ENABLE_WRITE_TOOLS=true`)
+- `assertAdminToolsEnabled(config)` — throws unless `enableAdminTools` is `true` (`TEAMDYNAMIX_ENABLE_ADMIN_TOOLS=true`)
+
+Destructive tools (remove asset link, remove contact, etc.) additionally include a `confirm: z.literal(true)` field in the input schema. The MCP SDK enforces this at the schema level before the handler is called.
 
 ## Response Formatting
 

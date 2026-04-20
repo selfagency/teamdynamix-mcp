@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [20.x]
+        node-version: [ 20.x ]
 
     steps:
       - name: Checkout
@@ -58,7 +58,9 @@ jobs:
 
       - name: Lint
         run: pnpm lint
-        continue-on-error: true
+
+      - name: Production dependency audit
+        run: pnpm audit --prod
 
       - name: Format check
         run: pnpm format:check

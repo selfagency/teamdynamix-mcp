@@ -12,8 +12,8 @@ Contributions are welcome. Please follow the guidelines below to keep the codeba
 ## Setup
 
 ```bash
-git clone https://github.com/selfagency/mcp-server-template.git
-cd mcp-server-template
+git clone https://github.com/selfagency/teamdynamix-mcp.git
+cd teamdynamix-mcp
 pnpm install
 pnpm build
 ```
@@ -81,7 +81,7 @@ pnpm lint:fix    # fix auto-fixable issues
 3. **Register tool** in the relevant `src/tools/*.tools.ts`
 4. **Update `src/index.ts`** if a new tool file is added
 5. **Write tests** in `src/services/__tests__/`
-6. **Document** in the corresponding `docs/tools/*.md` page
+6. **Document** in the corresponding reference pages under `docs/reference/`
 
 Follow snake_case naming for tool identifiers.
 
@@ -111,7 +111,7 @@ PRs that fail CI, introduce `any`, skip tests, or bypass the formatter will not 
 
 ## Reporting Issues
 
-Use [GitHub Issues](https://github.com/selfagency/mcp-server-template/issues). Include:
+Use [GitHub Issues](https://github.com/selfagency/teamdynamix-mcp/issues). Include:
 
 - template version
 - Node.js version (`node --version`)
