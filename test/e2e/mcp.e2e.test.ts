@@ -61,7 +61,7 @@ function nextId() {
 beforeAll(async () => {
   server = spawn('node', ['--import', 'tsx/esm', 'src/index.ts'], {
     cwd: process.cwd(),
-    stdio: ['pipe', 'pipe', 'inherit'],
+    stdio: ['pipe', 'pipe', 'pipe'],
   });
 
   const initId = nextId();
@@ -86,29 +86,8 @@ afterAll(() => {
   server?.kill('SIGTERM');
 });
 
-describe('MCP server E2E - template_ping', () => {
-  it('responds with default message', async () => {
-    const id = nextId();
-    writeRequest(server, {
-      jsonrpc: '2.0',
-      id,
-      method: 'tools/call',
-      params: {
-        name: 'template_ping',
-        arguments: { message: 'pong' },
-      },
-    });
-
-    const response = await waitForResponse(server, id);
-    expect(response.error).toBeUndefined();
-    const result = response.result as { content: Array<{ type: string; text: string }> };
-    expect(result.content[0].type).toBe('text');
-    expect(result.content[0].text).toContain('pong');
-  });
-});
-
 describe('MCP server E2E - tools/list', () => {
-  it('returns utility tools', async () => {
+  it('exposes TeamDynamix tool surface', async () => {
     const id = nextId();
     writeRequest(server, {
       jsonrpc: '2.0',
@@ -121,34 +100,81 @@ describe('MCP server E2E - tools/list', () => {
     expect(response.error).toBeUndefined();
     const result = response.result as { tools: Array<{ name: string }> };
     const names = result.tools.map((t: { name: string }) => t.name);
-    expect(names).toContain('template_ping');
-    expect(names).toContain('echo');
-    expect(names).toContain('text_transform');
-    expect(names).toContain('current_time');
-    expect(names).toContain('system_info');
+    expect(names).toContain('teamdynamix_server_status');
+    expect(names).toContain('teamdynamix_get_current_user');
+    expect(names).toContain('teamdynamix_list_applications');
+    expect(names).toContain('teamdynamix_create_ticket');
+    expect(names).toContain('teamdynamix_search_kb_articles');
+    expect(names).toContain('teamdynamix_get_asset');
+    expect(names).toContain('teamdynamix_search_cis');
+    expect(names).toContain('teamdynamix_search_users');
+    expect(names).toContain('teamdynamix_get_project');
+    expect(names).toContain('teamdynamix_list_accounts');
   });
 });
 
-describe('MCP server E2E - tool invocation', () => {
-  it('transforms text', async () => {
+describe('MCP server E2E - teamdynamix_server_status', () => {
+  it('returns status even when not configured', async () => {
     const id = nextId();
     writeRequest(server, {
       jsonrpc: '2.0',
       id,
       method: 'tools/call',
       params: {
-        name: 'text_transform',
-        arguments: {
-          text: 'hello template',
-          mode: 'uppercase',
-          response_format: 'json',
-        },
+        name: 'teamdynamix_server_status',
+        arguments: { response_format: 'json' },
       },
     });
 
     const response = await waitForResponse(server, id);
     expect(response.error).toBeUndefined();
-    const result = response.result as { structuredContent: { transformed: string } };
-    expect(result.structuredContent.transformed).toBe('HELLO TEMPLATE');
+    const result = response.result as { content: Array<{ type: string; text: string }> };
+    expect(result.content[0].type).toBe('text');
+    const parsed = JSON.parse(result.content[0].text) as { discoveryTools: unknown };
+    expect(parsed.discoveryTools).toBeDefined();
+  });
+});
+
+describe('MCP server E2E - debug log redaction', () => {
+  it('does not print raw credentials in debug startup logs', async () => {
+    let debugStderr = '';
+    const debugServer = spawn('node', ['--import', 'tsx/esm', 'src/index.ts'], {
+      cwd: process.cwd(),
+      stdio: ['pipe', 'pipe', 'pipe'],
+      env: {
+        ...process.env,
+        MCP_LOG_LEVEL: 'debug',
+        TEAMDYNAMIX_BASE_URL: 'https://example.teamdynamix.com/TDWebApi',
+        TEAMDYNAMIX_AUTH_MODE: 'standard',
+        TEAMDYNAMIX_USERNAME: 'demo@example.com',
+        TEAMDYNAMIX_PASSWORD: 'very-secret-password',
+      },
+    });
+
+    debugServer.stderr?.on('data', (chunk: Buffer) => {
+      debugStderr += chunk.toString();
+    });
+
+    const id = 10001;
+    writeRequest(debugServer, {
+      jsonrpc: '2.0',
+      id,
+      method: 'initialize',
+      params: {
+        protocolVersion: '2024-11-05',
+        capabilities: {},
+        clientInfo: { name: 'test-client', version: '0.0.0' },
+      },
+    });
+
+    const initResponse = await waitForResponse(debugServer, id);
+    expect(initResponse.error).toBeUndefined();
+
+    await new Promise(resolve => setTimeout(resolve, 30));
+    debugServer.kill('SIGTERM');
+
+    expect(debugStderr).toContain('[teamdynamix-mcp] sanitized config:');
+    expect(debugStderr).toContain('[configured]');
+    expect(debugStderr).not.toContain('very-secret-password');
   });
 });

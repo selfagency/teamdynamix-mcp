@@ -1,12 +1,11 @@
 {
   "servers": {
-    "template": {
-      "command": "node",
+    "git": {
+      "command": "npx",
       "args": [
-        "--import",
-        "tsx/esm",
-        "${workspaceFolder}/src/index.ts",
-        "--base-path",
+        "-y",
+        "@selfagency/git-mcp",
+        "--repo-path",
         "${workspaceFolder}"
       ]
     }

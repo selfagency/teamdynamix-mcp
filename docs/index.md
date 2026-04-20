@@ -2,34 +2,34 @@
 layout: home
 
 hero:
-  name: mcp-server-template
-  text: TypeScript MCP Server Starter
-  tagline: A production-grade Model Context Protocol template for quickly shipping safe, typed, extensible MCP servers.
+  name: teamdynamix-mcp
+  text: TeamDynamix MCP Server
+  tagline: Structured, safety-gated TeamDynamix ITSM operations for AI agents via MCP.
   actions:
     - theme: brand
-      text: Get Started
-      link: /guide/getting-started
+      text: Start with Tutorials
+      link: /tutorials/
     - theme: alt
-      text: Tool Reference
-      link: /tools/
+      text: Go to How-to Guides
+      link: /how-to/
     - theme: alt
-      text: GitHub
-      link: https://github.com/selfagency/mcp-server-template
+      text: Open Reference
+      link: /reference/
 
 features:
-  - icon: ⚙️
-    title: Stdio-first server
-    details: Ready-to-run MCP server bootstrap using the official SDK and stdio transport.
-  - icon: 🧩
-    title: Utility starter tools
-    details: Includes practical examples with schema validation, structured results, and robust error handling.
   - icon: 📚
-    title: Full documentation
-    details: End-to-end guides for configuration, architecture, testing, and extending the template.
+    title: Tutorials (learn)
+    details: Guided onboarding for first setup, first ticket workflow, and first KB workflow.
+  - icon: 🧭
+    title: How-to guides (do)
+    details: Task-oriented recipes for real operations like creating tickets, linking assets, and troubleshooting failures.
+  - icon: 🔎
+    title: Reference (lookup)
+    details: Exhaustive tool catalog, environment variables, safety behavior, resources, and error handling.
+  - icon: 💡
+    title: Explanation (understand)
+    details: Architecture, auth model, safety rationale, and rate-limit/retry design decisions.
   - icon: 🛡️
-    title: Safe defaults
-    details: Strict TypeScript, predictable APIs, and explicit boundaries between transport, tools, and services.
-  - icon: 🔌
-    title: MCP Resources
-    details: URI-addressable read-only resources for template config and capabilities.
+    title: Safe by default
+    details: Write/admin gates, confirm requirements for destructive operations, and Zod validation on tool inputs.
 ---

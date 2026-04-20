@@ -1,0 +1,78 @@
+{
+  "skill_name": "teamdynamix",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Find open high-priority tickets assigned to user Alex Kim and add a private troubleshooting comment to ticket 12345.",
+      "expected_output": "Uses user lookup + ticket search/get before comment write; includes ticket ID and confirmation of comment action.",
+      "assertions": [
+        "Performs ID discovery before write",
+        "Uses read-before-write pattern",
+        "Handles write-gate check explicitly",
+        "Returns concrete ticket identifier in summary"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Create a KB draft article about VPN timeout issues under the Networking KB category and keep it unpublished.",
+      "expected_output": "Resolves category ID, creates KB article draft with IsPublished false, and returns article ID.",
+      "assertions": [
+        "Looks up KB categories before create",
+        "Uses create_kb_article with write safety",
+        "Returns created article identifier"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Link asset 456 to ticket 12345, then verify the relationship exists.",
+      "expected_output": "Adds ticket asset relationship and verifies via ticket asset list.",
+      "assertions": [
+        "Uses add_ticket_asset",
+        "Performs verification read via list_ticket_assets",
+        "Reports verification outcome"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Remove contact UID 00000000-0000-0000-0000-000000000001 from ticket 12345.",
+      "expected_output": "Requires explicit confirm true for destructive remove and reports result.",
+      "assertions": [
+        "Includes confirm:true requirement",
+        "Uses remove_ticket_contact",
+        "Treats operation as destructive"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Create a new project issue for project 9001 titled 'Deployment rollback risk' and assign it to Morgan.",
+      "expected_output": "Resolves assignee GUID, creates project issue under project ID, and returns issue result.",
+      "assertions": [
+        "Uses user lookup for assignee",
+        "Uses create_project_issue with write-gate",
+        "Returns created issue metadata"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Show my TeamDynamix time entries from 2026-04-01 to 2026-04-15 and list the time types available.",
+      "expected_output": "Calls list_time_types and get_my_time_entries with requested date range and summarizes count.",
+      "assertions": [
+        "Uses list_time_types",
+        "Uses get_my_time_entries with StartDate/EndDate",
+        "Returns count and representative entries"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Write a Python script to convert JSON to YAML.",
+      "expected_output": "Skill should NOT trigger because request is unrelated to TeamDynamix operations.",
+      "assertions": ["Does not route into TeamDynamix workflow"]
+    },
+    {
+      "id": 8,
+      "prompt": "Our manager asked for service category IDs before creating a service request flow update.",
+      "expected_output": "Uses list_service_categories and returns IDs suitable for follow-up workflows.",
+      "assertions": ["Uses list_service_categories", "Provides ID-oriented output"]
+    }
+  ]
+}

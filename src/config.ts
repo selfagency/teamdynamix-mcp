@@ -1,46 +1,10 @@
-import path from 'node:path';
-
-/**
- * Parses --base-path from process.argv.
- * Supports both `--base-path /path` and `--base-path=/path` forms.
- */
-function parseCliBasePath(): string | undefined {
-  const args = process.argv.slice(2);
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i] ?? '';
-    if (arg === '--base-path' && i + 1 < args.length) {
-      return args[i + 1];
-    }
-    const match = /^--base-path=(.+)$/.exec(arg);
-    if (match?.[1]) return match[1];
-  }
-  return undefined;
-}
-
-const configuredBasePath: string | undefined = process.env['MCP_BASE_PATH'] ?? parseCliBasePath();
-
-/**
- * Optional server-level default base path, resolved to an absolute path.
- * Set via the MCP_BASE_PATH environment variable or --base-path CLI argument.
- */
-export const DEFAULT_BASE_PATH: string | undefined = configuredBasePath ? path.resolve(configuredBasePath) : undefined;
-
-/**
- * Resolves an effective file-system path for tool requests.
- * Uses the provided path if given, otherwise falls back to the server default base path.
- * Throws a clear error if neither is available.
- */
-export function resolveBasePath(basePath: string | undefined): string {
-  const resolved = basePath ?? DEFAULT_BASE_PATH;
-  if (!resolved) {
-    throw new Error(
-      'No base path provided. Pass base_path in the tool request, ' +
-        'or configure a server default via the MCP_BASE_PATH environment variable ' +
-        'or the --base-path CLI argument.',
-    );
-  }
-  return resolved;
-}
+import { z } from 'zod';
+import {
+  TEAMDYNAMIX_DEFAULT_MAX_RETRIES,
+  TEAMDYNAMIX_DEFAULT_TIMEOUT_MS,
+  TEAMDYNAMIX_MAX_RETRY_ATTEMPTS,
+} from './constants.js';
+import type { TeamDynamixAuthMode, TeamDynamixConfig, TeamDynamixConfigStatus } from './types.js';
 
 /**
  * Optional server name override.
@@ -61,3 +25,116 @@ export const LOG_LEVEL: 'debug' | 'info' | 'warn' | 'error' =
   process.env['MCP_LOG_LEVEL'] === 'error'
     ? process.env['MCP_LOG_LEVEL']
     : 'info';
+
+function normalizeOptionalString(value: string | undefined): string | undefined {
+  const normalized = value?.trim();
+  return normalized ? normalized : undefined;
+}
+
+function normalizeOptionalNumber(value: string | undefined): number | undefined {
+  if (!value?.trim()) {
+    return undefined;
+  }
+
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+}
+
+function normalizeBoolean(value: string | undefined, defaultValue: boolean): boolean {
+  if (!value) {
+    return defaultValue;
+  }
+
+  const normalized = value.trim().toLowerCase();
+  if (normalized === 'true') return true;
+  if (normalized === 'false') return false;
+  return defaultValue;
+}
+
+function normalizeNumberWithDefault(value: string | undefined, defaultValue: number, minimum: number): number {
+  if (!value?.trim()) {
+    return defaultValue;
+  }
+
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed >= minimum ? parsed : defaultValue;
+}
+
+function normalizeTeamDynamixBaseUrl(value: string | undefined): string | undefined {
+  const normalized = normalizeOptionalString(value);
+  return normalized ? normalized.replace(/\/+$/, '') : undefined;
+}
+
+function validateHttpsBaseUrl(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+
+  const schema = z
+    .string()
+    .url()
+    .refine(url => url.startsWith('https://'), {
+      message: 'TEAMDYNAMIX_BASE_URL must be an https URL.',
+    });
+
+  const parsed = schema.safeParse(value);
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? 'Invalid TEAMDYNAMIX_BASE_URL.');
+  }
+
+  return value;
+}
+
+function normalizeTeamDynamixAuthMode(value: string | undefined): TeamDynamixAuthMode {
+  return value?.trim().toLowerCase() === 'admin' ? 'admin' : 'standard';
+}
+
+export function getTeamDynamixConfig(): TeamDynamixConfig {
+  const baseUrl = validateHttpsBaseUrl(normalizeTeamDynamixBaseUrl(process.env['TEAMDYNAMIX_BASE_URL']));
+  const maxRetries = normalizeNumberWithDefault(
+    process.env['TEAMDYNAMIX_MAX_RETRIES'],
+    TEAMDYNAMIX_DEFAULT_MAX_RETRIES,
+    0,
+  );
+  if (maxRetries > 5) {
+    throw new Error(`TEAMDYNAMIX_MAX_RETRIES must be between 0 and ${TEAMDYNAMIX_MAX_RETRY_ATTEMPTS}.`);
+  }
+
+  return {
+    baseUrl,
+    authMode: normalizeTeamDynamixAuthMode(process.env['TEAMDYNAMIX_AUTH_MODE']),
+    username: normalizeOptionalString(process.env['TEAMDYNAMIX_USERNAME']),
+    password: normalizeOptionalString(process.env['TEAMDYNAMIX_PASSWORD']),
+    beid: normalizeOptionalString(process.env['TEAMDYNAMIX_BEID']),
+    webServicesKey: normalizeOptionalString(process.env['TEAMDYNAMIX_WEB_SERVICES_KEY']),
+    defaultTicketAppId: normalizeOptionalNumber(process.env['TEAMDYNAMIX_DEFAULT_TICKET_APP_ID']),
+    defaultAssetAppId: normalizeOptionalNumber(process.env['TEAMDYNAMIX_DEFAULT_ASSET_APP_ID']),
+    defaultKnowledgeBaseAppId: normalizeOptionalNumber(process.env['TEAMDYNAMIX_DEFAULT_KB_APP_ID']),
+    timeoutMs: normalizeNumberWithDefault(process.env['TEAMDYNAMIX_TIMEOUT_MS'], TEAMDYNAMIX_DEFAULT_TIMEOUT_MS, 1_000),
+    maxRetries,
+    enableWriteTools: normalizeBoolean(process.env['TEAMDYNAMIX_ENABLE_WRITE_TOOLS'], false),
+    enableAdminTools: normalizeBoolean(process.env['TEAMDYNAMIX_ENABLE_ADMIN_TOOLS'], false),
+  };
+}
+
+export function getTeamDynamixConfigStatus(
+  config: TeamDynamixConfig = getTeamDynamixConfig(),
+): TeamDynamixConfigStatus {
+  const missing = new Set<string>();
+
+  if (!config.baseUrl) {
+    missing.add('TEAMDYNAMIX_BASE_URL');
+  }
+
+  if (config.authMode === 'admin') {
+    if (!config.beid) missing.add('TEAMDYNAMIX_BEID');
+    if (!config.webServicesKey) missing.add('TEAMDYNAMIX_WEB_SERVICES_KEY');
+  } else {
+    if (!config.username) missing.add('TEAMDYNAMIX_USERNAME');
+    if (!config.password) missing.add('TEAMDYNAMIX_PASSWORD');
+  }
+
+  return {
+    configured: missing.size === 0,
+    missing: [...missing],
+    authMode: config.authMode,
+  };
+}
