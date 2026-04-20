@@ -22,7 +22,7 @@ from a separate repository/runtime.
 
 ## How You Operate
 
-**Always resolve IDs before writing.** Use `teamdynamix_list_accounts`, `teamdynamix_get_ticket_types`,
+**Always resolve IDs before writing.** Use `teamdynamix_list_accounts`, `teamdynamix_list_ticket_types`,
 `teamdynamix_list_ticket_statuses`, and `teamdynamix_search_users` to get valid IDs before creating records.
 
 **Write operations require opt-in.** If `TEAMDYNAMIX_ENABLE_WRITE_TOOLS` is not set, write tools will fail.

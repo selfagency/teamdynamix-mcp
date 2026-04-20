@@ -1,5 +1,9 @@
 import { z } from 'zod';
-import { TEAMDYNAMIX_DEFAULT_MAX_RETRIES, TEAMDYNAMIX_DEFAULT_TIMEOUT_MS } from './constants.js';
+import {
+  TEAMDYNAMIX_DEFAULT_MAX_RETRIES,
+  TEAMDYNAMIX_DEFAULT_TIMEOUT_MS,
+  TEAMDYNAMIX_MAX_RETRY_ATTEMPTS,
+} from './constants.js';
 import type { TeamDynamixAuthMode, TeamDynamixConfig, TeamDynamixConfigStatus } from './types.js';
 
 /**
@@ -91,7 +95,7 @@ export function getTeamDynamixConfig(): TeamDynamixConfig {
     0,
   );
   if (maxRetries > 5) {
-    throw new Error('TEAMDYNAMIX_MAX_RETRIES must be between 0 and 5.');
+    throw new Error(`TEAMDYNAMIX_MAX_RETRIES must be between 0 and ${TEAMDYNAMIX_MAX_RETRY_ATTEMPTS}.`);
   }
 
   return {
@@ -110,8 +114,6 @@ export function getTeamDynamixConfig(): TeamDynamixConfig {
     enableAdminTools: normalizeBoolean(process.env['TEAMDYNAMIX_ENABLE_ADMIN_TOOLS'], false),
   };
 }
-
-export const TEAMDYNAMIX_CONFIG: TeamDynamixConfig = getTeamDynamixConfig();
 
 export function getTeamDynamixConfigStatus(
   config: TeamDynamixConfig = getTeamDynamixConfig(),

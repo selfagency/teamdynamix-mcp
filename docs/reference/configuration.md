@@ -34,11 +34,6 @@ title: Configuration
 | `MCP_LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error` |
 | `MCP_SERVER_NAME` | unset | Overrides initialize name |
 | `MCP_SERVER_VERSION` | unset | Overrides initialize version |
-| `MCP_BASE_PATH` | unset | Reserved base path; not used by TeamDynamix tool logic |
-
-## CLI flag
-
-- `--base-path` is supported by the server bootstrap and maps to the same base-path logic as `MCP_BASE_PATH`.
 
 ## Auth mode behavior
 

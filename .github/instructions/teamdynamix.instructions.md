@@ -32,7 +32,7 @@ or API paths.
 | Need | Tool |
 | --- | --- |
 | Account / department ID | `teamdynamix_list_accounts` |
-| Ticket type ID | `teamdynamix_get_ticket_types` |
+| Ticket type ID | `teamdynamix_list_ticket_types` |
 | Ticket status ID | `teamdynamix_list_ticket_statuses` |
 | Ticket priority ID | `teamdynamix_list_ticket_priorities` |
 | Custom attribute IDs | `teamdynamix_list_custom_attributes` (component_id: 9 for tickets) |
@@ -47,7 +47,7 @@ or API paths.
 ## Ticket Workflow
 
 1. Resolve `app_id` — use `teamdynamix_list_applications` or the configured default.
-2. Resolve `TypeID` via `teamdynamix_get_ticket_types`.
+2. Resolve `TypeID` via `teamdynamix_list_ticket_types`.
 3. Resolve `AccountID` via `teamdynamix_list_accounts`.
 4. Resolve `RequestorUID` and `ResponsibleUID` via `teamdynamix_search_users`.
 5. Call `teamdynamix_create_ticket` with all resolved IDs.
