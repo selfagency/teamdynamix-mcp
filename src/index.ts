@@ -5,38 +5,14 @@ import { LOG_LEVEL, SERVER_NAME_OVERRIDE, SERVER_VERSION_OVERRIDE, getTeamDynami
 import { SERVER_NAME, SERVER_VERSION } from './constants.js';
 import { registerTeamDynamixResources } from './resources/teamdynamix.resources.js';
 import { redactTeamDynamixConfig } from './services/teamdynamix/core.service.js';
-import { registerTeamDynamixAssetTools } from './tools/teamdynamix.assets.tools.js';
-import { registerTeamDynamixCmdbTools } from './tools/teamdynamix.cmdb.tools.js';
-import { registerTeamDynamixDiscoveryTools } from './tools/teamdynamix.discovery.tools.js';
-import { registerTeamDynamixEnumerationTools } from './tools/teamdynamix.enumeration.tools.js';
-import { registerTeamDynamixKbTools } from './tools/teamdynamix.kb.tools.js';
-import { registerTeamDynamixPeopleTools } from './tools/teamdynamix.people.tools.js';
-import {
-  registerTeamDynamixProjectTools,
-  registerTeamDynamixServiceCatalogTools,
-} from './tools/teamdynamix.services.tools.js';
-import {
-  registerTeamDynamixTicketContactTools,
-  registerTeamDynamixTicketTaskTools,
-} from './tools/teamdynamix.ticket-tasks.tools.js';
-import { registerTeamDynamixTicketTools } from './tools/teamdynamix.tickets.tools.js';
+import { registerTeamDynamixDomainGatewayTools } from './tools/teamdynamix.domain-gateways.tools.js';
 
 const server = new McpServer({
   name: SERVER_NAME_OVERRIDE ?? SERVER_NAME,
   version: SERVER_VERSION_OVERRIDE ?? SERVER_VERSION,
 });
 
-registerTeamDynamixDiscoveryTools(server);
-registerTeamDynamixTicketTools(server);
-registerTeamDynamixPeopleTools(server);
-registerTeamDynamixKbTools(server);
-registerTeamDynamixAssetTools(server);
-registerTeamDynamixServiceCatalogTools(server);
-registerTeamDynamixProjectTools(server);
-registerTeamDynamixEnumerationTools(server);
-registerTeamDynamixTicketTaskTools(server);
-registerTeamDynamixTicketContactTools(server);
-registerTeamDynamixCmdbTools(server);
+registerTeamDynamixDomainGatewayTools(server);
 registerTeamDynamixResources(server);
 
 async function main(): Promise<void> {
