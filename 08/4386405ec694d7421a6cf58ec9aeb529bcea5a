@@ -1,0 +1,42 @@
+skills/teamdynamix/references/gotchas.md
+  h_5cf1e2c1161853 18,22,27,36
+skills/teamdynamix/SKILL.md
+  h_5cf1e2c1161853 78-87,89,91-92
+skills/teamdynamix/references/tool-catalog.md
+  h_5cf1e2c1161853 1,3-7,9-103,107-108
+skills/teamdynamix/references/runbooks.md
+  h_5cf1e2c1161853 10-12,15,18,21,24,27,30-31,46-47,50-52,56-58,71-73,75-76,89-90,93-94,97-98,101,111-112,115-116,119-120,128-129
+skills/teamdynamix/references/id-lookup.md
+  h_5cf1e2c1161853 9,11,13,15,17,19,24,26,28,33-36,41-42,44
+scripts/release.js
+  h_5cf1e2c1161853 144,432-434
+prompts/teamdynamix-agent.prompt.md
+  h_5cf1e2c1161853 21-22,29,31-35,51,56-57,61-62,67-68,72-73,77-78,85
+scripts/write-dist-package.js
+  h_5cf1e2c1161853 13,30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "084386405ec694d7421a6cf58ec9aeb529bcea5a",
+  "prompts": {
+    "0aa49f2f842ad284": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "0394b134-583c-42da-8eae-bce08d290ff1",
+        "model": "copilot/auto"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 388,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_5cf1e2c1161853": {
+      "author": "Daniel Sieradski"
+    }
+  }
+}
