@@ -1,2 +1,2 @@
-pnpm exec lint-staged --diff-filter=ACMR
 pnpm typecheck
+pnpm exec lint-staged --diff-filter=ACMR
