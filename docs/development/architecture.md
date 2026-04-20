@@ -28,25 +28,22 @@ src/
 ├── schemas/
 │   └── teamdynamix/index.ts         # All Zod input schemas (tickets, KB, assets, CI, projects …)
 ├── tools/
-│   ├── teamdynamix.discovery.tools.ts     # server_status, get_current_user, list_applications
+│   ├── teamdynamix.discovery.tools.ts     # server_status, get_current_user, list_applications (4 tools)
 │   ├── teamdynamix.tickets.tools.ts       # Ticket CRUD + metadata (11 tools)
 │   ├── teamdynamix.ticket-tasks.tools.ts  # Ticket tasks, asset links, contacts (8 tools)
 │   ├── teamdynamix.people.tools.ts        # Users + groups (5 tools)
 │   ├── teamdynamix.kb.tools.ts            # KB CRUD + search (5 tools)
 │   ├── teamdynamix.assets.tools.ts        # Asset get/search/metadata (4 tools)
-│   ├── teamdynamix.services.tools.ts      # Service catalog + Projects + Time (13+ tools)
+│   ├── teamdynamix.services.tools.ts      # Service catalog + Projects + Time (13 tools)
 │   ├── teamdynamix.cmdb.tools.ts          # CI/CMDB + vendors (5 tools)
-│   ├── teamdynamix.enumeration.tools.ts   # Accounts, locations, roles, attributes (5 tools)
-│   └── utility.tools.ts                   # Generic MCP utility tools
+│   └── teamdynamix.enumeration.tools.ts   # Accounts, locations, roles, attributes (5 tools)
 ├── services/
 │   ├── teamdynamix/
 │   │   ├── client.service.ts        # TeamDynamixClient — HTTP, auth, retry, safety guards
 │   │   └── core.service.ts          # Date helpers, JSON Patch builder, rate limit parser, JWT decode
-│   ├── utility.service.ts           # Utility tool helpers
 │   └── __tests__/                   # Service unit tests
 └── resources/
-	├── teamdynamix.resources.ts      # TeamDynamix MCP resources
-	└── template.resources.ts         # Generic capability/config resources
+    └── teamdynamix.resources.ts     # TeamDynamix MCP resources (capabilities, config)
 ```
 
 ## Layer Responsibilities

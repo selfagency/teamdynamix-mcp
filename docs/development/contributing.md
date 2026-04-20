@@ -113,7 +113,6 @@ PRs that fail CI, introduce `any`, skip tests, or bypass the formatter will not 
 
 Use [GitHub Issues](https://github.com/selfagency/teamdynamix-mcp/issues). Include:
 
-- template version
 - Node.js version (`node --version`)
 - OS and architecture
 - Minimal reproduction steps

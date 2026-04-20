@@ -34,7 +34,7 @@ title: Configuration
 | `MCP_LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error` |
 | `MCP_SERVER_NAME` | unset | Overrides initialize name |
 | `MCP_SERVER_VERSION` | unset | Overrides initialize version |
-| `MCP_BASE_PATH` | unset | Legacy template path default; not used by TeamDynamix tool logic |
+| `MCP_BASE_PATH` | unset | Reserved base path; not used by TeamDynamix tool logic |
 
 ## CLI flag
 

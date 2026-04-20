@@ -16,17 +16,27 @@ pnpm test:coverage     # run with coverage report
 Tests are organized by layer:
 
 ```text
-src/services/__tests__/
-└── utility.service.test.ts
+src/
+├── services/__tests__/
+│   ├── config.validation.test.ts              # Config parsing and validation
+│   ├── schemas.test.ts                        # Zod schema contracts
+│   ├── teamdynamix.client.service.test.ts     # HTTP client, auth, retry behavior
+│   ├── teamdynamix.client.service.extensions.test.ts  # Client extensions and edge cases
+│   └── teamdynamix.core.service.test.ts       # Date helpers, patch builder, rate limit parser
+└── tools/__tests__/
+    ├── teamdynamix.kb.tools.test.ts           # KB tool handlers
+    ├── teamdynamix.services.tools.test.ts     # Service catalog tool handlers
+    └── teamdynamix.ticket-tasks.tools.test.ts # Ticket task/contact/asset tool handlers
 
 test/
 ├── integration/
-│   └── mcp.tools.integration.test.ts
+│   ├── teamdynamix.safety.integration.test.ts # Write/admin gate enforcement
+│   └── teamdynamix.tools.integration.test.ts  # Tool registration and contract validation
 └── e2e/
-    └── mcp.e2e.test.ts
+    └── mcp.e2e.test.ts                        # Full MCP transport smoke test
 ```
 
-Service tests run without transport concerns. Integration tests validate tool registration and structured responses. E2E tests spawn the server and exercise JSON-RPC behavior.
+Service tests run without transport concerns. Integration tests validate tool registration and safety gate enforcement. The E2E test spawns the full server and exercises JSON-RPC behavior.
 
 ## Writing a Test
 
@@ -34,12 +44,12 @@ Service tests run without transport concerns. Integration tests validate tool re
 
 ```ts
 import { describe, expect, it } from 'vitest';
-import { transformText } from '../utility.service.js';
+import { toTeamDynamixDateTime } from '../../services/teamdynamix/core.service.js';
 
-describe('transformText', () => {
-  it('creates slug output', () => {
-    const result = transformText('Hello MCP', 'slug');
-    expect(result.transformed).toBe('hello-mcp');
+describe('toTeamDynamixDateTime', () => {
+  it('formats ISO 8601 to TeamDynamix wire format', () => {
+    const result = toTeamDynamixDateTime('2026-04-20T12:00:00Z');
+    expect(result).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
   });
 });
 ```

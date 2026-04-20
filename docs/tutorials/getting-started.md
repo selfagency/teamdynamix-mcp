@@ -39,10 +39,9 @@ Use stdio transport with:
 
 Call these tools in order:
 
-1. `template_ping`
-2. `teamdynamix_server_status`
-3. `teamdynamix_get_current_user`
-4. `teamdynamix_list_applications`
+1. `teamdynamix_server_status` — confirms credentials and base URL are configured
+2. `teamdynamix_get_current_user` — returns your authenticated user record
+3. `teamdynamix_list_applications` — lists all TeamDynamix apps your account can access
 
 Expected: responses arrive without errors, and `teamdynamix_server_status` shows `configured: true`.
 

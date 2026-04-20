@@ -1,6 +1,6 @@
 # TeamDynamix Tool Catalog (Source of Truth)
 
-The list below reflects currently registered tools in `src/tools/teamdynamix*.ts` plus utility tools.
+The list below reflects currently registered tools in `src/tools/teamdynamix*.ts`.
 
 ## TeamDynamix tools
 
@@ -91,14 +91,6 @@ The list below reflects currently registered tools in `src/tools/teamdynamix*.ts
 - `teamdynamix_list_locations`
 - `teamdynamix_list_functional_roles`
 - `teamdynamix_list_custom_attributes`
-
-## Utility tools
-
-- `template_ping`
-- `echo`
-- `text_transform`
-- `current_time`
-- `system_info`
 
 ## Notes
 

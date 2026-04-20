@@ -8,17 +8,11 @@ The server exposes read-only MCP resources for runtime metadata.
 
 | URI | Purpose |
 | --- | --- |
-| `teamdynamix://capabilities` | Snapshot of implemented TeamDynamix capabilities |
-| `teamdynamix://config` | Sanitized runtime TeamDynamix config + readiness status |
-
-## Template resources
-
-| URI | Purpose |
-| --- | --- |
-| `template://capabilities` | Server metadata and baseline tool/resource listing |
-| `template://config` | Sanitized runtime server identity and log/base-path values |
+| `teamdynamix://capabilities` | Snapshot of implemented TeamDynamix capabilities and tool families |
+| `teamdynamix://config` | Sanitized runtime TeamDynamix config + readiness status (credentials redacted) |
 
 ## Notes
 
-- `teamdynamix://capabilities` currently returns a minimal capability slice and should be treated as a snapshot, not a full tool contract.
-- Use [Tool Catalog](/reference/tools) as the exhaustive tool reference.
+- `teamdynamix://capabilities` returns a capability summary. Use [Tool Catalog](/reference/tools) as the exhaustive tool reference.
+- `teamdynamix://config` never exposes raw credentials — password, key, and token fields are replaced with `[configured]` or `[not set]`.
+- Resources are read-only and available regardless of write/admin flag state.
