@@ -132,6 +132,16 @@ function messageFromError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
+function toStructuredContent(payload: unknown): Record<string, unknown> {
+  if (typeof payload === 'object' && payload !== null && !Array.isArray(payload)) {
+    return payload as Record<string, unknown>;
+  }
+
+  return {
+    data: payload,
+  };
+}
+
 function parsePayload<TSchema extends z.ZodTypeAny>(
   schema: TSchema,
   payload: Record<string, unknown>,
@@ -150,12 +160,20 @@ function parsePayload<TSchema extends z.ZodTypeAny>(
 function toSuccessResponse(payload: unknown, responseFormat: ResponseFormat) {
   return {
     content: [{ type: 'text' as const, text: render(payload, responseFormat) }],
+    structuredContent: toStructuredContent(payload),
   };
 }
 
 function toErrorResponse(error: unknown) {
+  const message = messageFromError(error);
+
   return {
-    content: [{ type: 'text' as const, text: `Error: ${messageFromError(error)}` }],
+    content: [{ type: 'text' as const, text: `Error: ${message}` }],
+    structuredContent: {
+      ok: false,
+      kind: 'unknown',
+      message,
+    },
     isError: true,
   };
 }
