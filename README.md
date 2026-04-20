@@ -184,4 +184,4 @@ pnpm build       # tsup → dist/
 
 ## License
 
-MIT © [Daniel Sieradski](https://self.agency)
+MIT © [The Self Agency LLC](https://self.agency)

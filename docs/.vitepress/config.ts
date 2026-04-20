@@ -113,7 +113,7 @@ export default defineConfig({
 
     footer: {
       message: 'Released under the MIT License.',
-      copyright: 'Copyright © 2024-present Daniel Sieradski',
+      copyright: 'Copyright ©2026 The Self Agency LLC',
     },
 
     search: {
