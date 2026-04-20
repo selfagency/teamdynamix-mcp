@@ -1,0 +1,14 @@
+{
+  "servers": {
+    "template": {
+      "command": "node",
+      "args": [
+        "--import",
+        "tsx/esm",
+        "${workspaceFolder}/src/index.ts",
+        "--base-path",
+        "${workspaceFolder}"
+      ]
+    }
+  }
+}
