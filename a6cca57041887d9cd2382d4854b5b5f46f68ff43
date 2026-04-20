@@ -1,0 +1,34 @@
+src/schemas/teamdynamix/index.ts
+  h_5cf1e2c1161853 64,242,310,322,329
+.github/skills/typescript-mcp-server-generator/SKILL.md
+  h_5cf1e2c1161853 13,23
+package.json
+  h_5cf1e2c1161853 3,9
+src/services/__tests__/schemas.test.ts
+  h_5cf1e2c1161853 33,70,145,171,175
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.0",
+  "base_commit_sha": "a6cca57041887d9cd2382d4854b5b5f46f68ff43",
+  "prompts": {
+    "e90fcdcb872fdaf4": {
+      "agent_id": {
+        "tool": "github-copilot-tab",
+        "id": "ai_tab-1776722549770",
+        "model": "default"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_5cf1e2c1161853": {
+      "author": "Daniel Sieradski"
+    }
+  }
+}
