@@ -1,4 +1,4 @@
-# teamdynamix-mcp
+# 🎟️ TeamDynamix MCP Server (unofficial)
 
 A TypeScript [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server that exposes [TeamDynamix](https://www.teamdynamix.com/) ITSM capabilities as agent-callable tools. Designed for AI agents and MCP clients that need structured, safety-gated access to TeamDynamix operations.
 
