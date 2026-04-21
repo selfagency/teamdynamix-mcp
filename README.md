@@ -1,5 +1,7 @@
 # 🎟️ TeamDynamix MCP Server (unofficial)
 
+![NPM Version](https://img.shields.io/npm/v/@selfagency/teamdynamix-mcp) [![CI](https://github.com/selfagency/teamdynamix-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/selfagency/teamdynamix-mcp/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/selfagency/teamdynamix-mcp/graph/badge.svg?token=kYslnQkMFy)](https://codecov.io/gh/selfagency/teamdynamix-mcp)
+
 A TypeScript [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server that exposes [TeamDynamix](https://www.teamdynamix.com/) ITSM capabilities as agent-callable tools. Designed for AI agents and MCP clients that need structured, safety-gated access to TeamDynamix operations.
 
 ## Features
