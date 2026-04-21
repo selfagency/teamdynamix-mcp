@@ -1,0 +1,26 @@
+package.json
+  h_5cf1e2c1161853 49
+test/e2e/mcp.e2e.test.ts
+  h_5cf1e2c1161853 18-23,25,30,34-53,57,61,67
+src/services/teamdynamix/render.service.ts
+  h_5cf1e2c1161853 11,14-15,24,49,131,144,165,167-170,172-176
+src/tools/teamdynamix.discovery.tools.ts
+  h_5cf1e2c1161853 7
+src/services/__tests__/teamdynamix.render.service.test.ts
+  h_5cf1e2c1161853 1-139
+src/tools/teamdynamix.tickets.tools.ts
+  h_5cf1e2c1161853 14,41,43-44
+src/tools/teamdynamix.domain-gateways.tools.ts
+  h_5cf1e2c1161853 30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "56b4530e11b164b58c2923581e3b59893d6c6cda",
+  "prompts": {},
+  "humans": {
+    "h_5cf1e2c1161853": {
+      "author": "Daniel Sieradski"
+    }
+  }
+}
