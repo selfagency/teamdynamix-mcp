@@ -66,3 +66,96 @@ describe('teamdynamix client service hardening', () => {
     expect(requestCount).toBe(7);
   });
 });
+describe('teamdynamix client service unconfigured error paths', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('throws when baseUrl is missing', async () => {
+    const client = new TeamDynamixClient({ ...baseConfig, baseUrl: undefined });
+    await expect(client.listApplications()).rejects.toThrow(
+      'TeamDynamix is not configured. Missing: TEAMDYNAMIX_BASE_URL',
+    );
+  });
+
+  it('throws when username is missing in standard mode', async () => {
+    const client = new TeamDynamixClient({ ...baseConfig, username: undefined });
+    await expect(client.listApplications()).rejects.toThrow(
+      'TeamDynamix is not configured. Missing: TEAMDYNAMIX_USERNAME',
+    );
+  });
+
+  it('throws when password is missing in standard mode', async () => {
+    const client = new TeamDynamixClient({ ...baseConfig, password: undefined });
+    await expect(client.listApplications()).rejects.toThrow(
+      'TeamDynamix is not configured. Missing: TEAMDYNAMIX_PASSWORD',
+    );
+  });
+
+  it('throws when beid is missing in admin mode', async () => {
+    const client = new TeamDynamixClient({ ...baseConfig, authMode: 'admin', beid: undefined, webServicesKey: 'key' });
+    await expect(client.listApplications()).rejects.toThrow('TeamDynamix is not configured. Missing: TEAMDYNAMIX_BEID');
+  });
+
+  it('throws when webServicesKey is missing in admin mode', async () => {
+    const client = new TeamDynamixClient({ ...baseConfig, authMode: 'admin', beid: 'beid', webServicesKey: undefined });
+    await expect(client.listApplications()).rejects.toThrow(
+      'TeamDynamix is not configured. Missing: TEAMDYNAMIX_WEB_SERVICES_KEY',
+    );
+  });
+
+  it('uses cached token on second request without re-authenticating', async () => {
+    let fetchCount = 0;
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async () => {
+      fetchCount += 1;
+      if (fetchCount === 1) {
+        // Login response
+        return new Response('header.eyJleHAiOjk5OTk5OTk5OTl9.sig', {
+          status: 200,
+          headers: { 'content-type': 'text/plain' },
+        });
+      }
+      return new Response(JSON.stringify([{ ID: 1, Name: 'App' }]), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
+    });
+
+    const client = new TeamDynamixClient(baseConfig);
+    await client.listApplications();
+    await client.listApplications();
+
+    // Only 1 login call + 2 API calls (token cached)
+    expect(fetchCount).toBe(3);
+  });
+
+  it('aborts request after timeoutMs elapses', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (_url, opts) => {
+      if (!opts?.signal) throw new Error('No signal provided to fetch');
+      return new Response('fake.jwt.token', { status: 200, headers: { 'content-type': 'text/plain' } });
+    });
+
+    // Intercept the second fetch (the API call) to simulate abort
+    let callCount = 0;
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (_url, opts) => {
+      callCount += 1;
+      if (callCount === 1) {
+        return new Response('fake.jwt.token', { status: 200, headers: { 'content-type': 'text/plain' } });
+      }
+      // Simulate a request that honors the abort signal
+      return new Promise<Response>((_resolve, reject) => {
+        if (opts?.signal?.aborted) {
+          reject(new DOMException('The operation was aborted', 'AbortError'));
+          return;
+        }
+        opts?.signal?.addEventListener('abort', () => {
+          reject(new DOMException('The operation was aborted', 'AbortError'));
+        });
+        // Never resolve naturally to trigger abort
+      });
+    });
+
+    const client = new TeamDynamixClient({ ...baseConfig, timeoutMs: 50, maxRetries: 0 });
+    await expect(client.listApplications()).rejects.toThrow('The operation was aborted');
+  });
+});

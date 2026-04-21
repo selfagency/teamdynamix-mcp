@@ -221,7 +221,7 @@ export class TeamDynamixClient {
   }
 
   public async removeTicketAsset(appId: number, ticketId: number, assetId: number): Promise<void> {
-    await this.requestJson<unknown>(`/api/${appId}/tickets/${ticketId}/assets/${assetId}`, { method: 'DELETE' });
+    await this.requestJson<void>(`/api/${appId}/tickets/${ticketId}/assets/${assetId}`, { method: 'DELETE' });
   }
 
   // -------------------------------------------------------------------------
@@ -458,7 +458,14 @@ export class TeamDynamixClient {
     const cappedRetries = Math.min(this.config.maxRetries, TEAMDYNAMIX_MAX_RETRY_ATTEMPTS);
 
     for (let attempt = 0; attempt <= cappedRetries; attempt += 1) {
-      const response = await fetch(endpoint, requestInit);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), this.config.timeoutMs);
+      let response: Response;
+      try {
+        response = await fetch(endpoint, { ...requestInit, signal: controller.signal });
+      } finally {
+        clearTimeout(timeoutId);
+      }
 
       if (response.status === 429 && attempt < cappedRetries) {
         const rateLimit = parseRateLimit(response.headers);
@@ -530,14 +537,22 @@ export class TeamDynamixClient {
       ? JSON.stringify({ BEID: this.config.beid, WebServicesKey: this.config.webServicesKey })
       : JSON.stringify({ username: this.config.username, password: this.config.password });
 
-    const response = await fetch(`${this.config.baseUrl}${loginPath}`, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json, text/plain;q=0.9',
-        'Content-Type': 'application/json',
-      },
-      body,
-    });
+    const loginController = new AbortController();
+    const loginTimeoutId = setTimeout(() => loginController.abort(), this.config.timeoutMs);
+    let response: Response;
+    try {
+      response = await fetch(`${this.config.baseUrl}${loginPath}`, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json, text/plain;q=0.9',
+          'Content-Type': 'application/json',
+        },
+        body,
+        signal: loginController.signal,
+      });
+    } finally {
+      clearTimeout(loginTimeoutId);
+    }
 
     if (!response.ok) {
       await response.text();

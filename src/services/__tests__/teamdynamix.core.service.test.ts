@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildTeamDynamixJsonPatchDocument,
   decodeJwtExpiryEpochSeconds,
+  extractAuthToken,
   parseRateLimit,
   redactTeamDynamixConfig,
   toTeamDynamixDateOnly,
@@ -82,5 +83,57 @@ describe('teamdynamix core service', () => {
     const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' + 'eyJleHAiOjE5MDAwMDAwMDAsInN1YiI6InRlc3QifQ.' + 'signature';
 
     expect(decodeJwtExpiryEpochSeconds(token)).toBe(1_900_000_000);
+  });
+});
+
+describe('toTeamDynamixDateTime invalid inputs', () => {
+  it('throws TypeError for a non-date string', () => {
+    expect(() => toTeamDynamixDateTime('not-a-date')).toThrow(TypeError);
+    expect(() => toTeamDynamixDateTime('not-a-date')).toThrow('Invalid date value: "not-a-date"');
+  });
+
+  it('throws TypeError for an Invalid Date object', () => {
+    expect(() => toTeamDynamixDateTime(new Date('garbage'))).toThrow(TypeError);
+  });
+});
+
+describe('toTeamDynamixDateOnly invalid inputs', () => {
+  it('throws TypeError for a non-date string', () => {
+    expect(() => toTeamDynamixDateOnly('not-a-date')).toThrow(TypeError);
+    expect(() => toTeamDynamixDateOnly('not-a-date')).toThrow('Invalid date value: "not-a-date"');
+  });
+
+  it('throws TypeError for an Invalid Date object', () => {
+    expect(() => toTeamDynamixDateOnly(new Date('garbage'))).toThrow(TypeError);
+  });
+});
+
+describe('extractAuthToken', () => {
+  it('returns trimmed string payload directly', () => {
+    expect(extractAuthToken('  my.jwt.token  ')).toBe('my.jwt.token');
+  });
+
+  it('throws when payload is null', () => {
+    expect(() => extractAuthToken(null)).toThrow('Unable to extract bearer token');
+  });
+
+  it('throws when payload is a number (non-object non-string)', () => {
+    expect(() => extractAuthToken(42)).toThrow('Unable to extract bearer token');
+  });
+
+  it('throws when payload is an object with no recognized key', () => {
+    expect(() => extractAuthToken({ unknownField: 'value' })).toThrow('Unable to extract bearer token');
+  });
+
+  it('extracts token from object with recognized key "token"', () => {
+    expect(extractAuthToken({ token: 'abc.def.ghi' })).toBe('abc.def.ghi');
+  });
+
+  it('extracts token from object with recognized key "TokenText"', () => {
+    expect(extractAuthToken({ TokenText: '  padded.token  ' })).toBe('padded.token');
+  });
+
+  it('extracts token from object with recognized key "accessToken"', () => {
+    expect(extractAuthToken({ accessToken: 'access.token.value' })).toBe('access.token.value');
   });
 });

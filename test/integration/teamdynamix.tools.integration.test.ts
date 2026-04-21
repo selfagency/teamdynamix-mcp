@@ -13,7 +13,7 @@ function createTestServer() {
 }
 
 async function callTool(server: McpServer, name: string, args: Record<string, unknown>) {
-  const tools = (server as any)._registeredTools as Record<
+  const tools = (server as Record<string, unknown>)['_registeredTools'] as Record<
     string,
     { handler: (args: Record<string, unknown>) => Promise<unknown> }
   >;

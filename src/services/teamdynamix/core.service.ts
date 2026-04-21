@@ -36,11 +36,17 @@ export function buildTeamDynamixJsonPatchDocument(
 
 export function toTeamDynamixDateTime(value: Date | string): string {
   const date = value instanceof Date ? value : new Date(value);
+  if (!Number.isFinite(date.getTime())) {
+    throw new TypeError(`Invalid date value: "${String(value)}"`);
+  }
   return date.toISOString();
 }
 
 export function toTeamDynamixDateOnly(value: Date | string): string {
   const date = value instanceof Date ? value : new Date(value);
+  if (!Number.isFinite(date.getTime())) {
+    throw new TypeError(`Invalid date value: "${String(value)}"`);
+  }
   return date.toISOString().slice(0, 10);
 }
 
