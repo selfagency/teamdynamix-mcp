@@ -37,6 +37,7 @@
     "coverage",
     "playwright-report",
     "test-results",
+    "results.sarif",
     "src/lexicons",
     ".wxt"
   ]
