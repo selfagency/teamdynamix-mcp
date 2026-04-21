@@ -105,6 +105,67 @@ describe('teamdynamix discovery tools', () => {
     expect(result.structuredContent.appId).toBe(123);
     expect(result.structuredContent.count).toBe(1);
   });
+
+  it('uses defaultTicketAppId when no app_id is supplied', async () => {
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response('fake.jwt.token', { status: 200, headers: { 'content-type': 'text/plain' } }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify([{ ID: 10, Name: 'Open' }]), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      );
+
+    const result = (await callTool(server, 'teamdynamix_list_ticket_statuses', {
+      response_format: 'json',
+    })) as { structuredContent: Record<string, unknown> };
+
+    // TEAMDYNAMIX_DEFAULT_TICKET_APP_ID=123 from beforeEach
+    expect(result.structuredContent.appId).toBe(123);
+  });
+
+  it('returns error when app_id is omitted and no default is configured', async () => {
+    delete process.env['TEAMDYNAMIX_DEFAULT_TICKET_APP_ID'];
+
+    const result = (await callTool(server, 'teamdynamix_list_ticket_statuses', {
+      response_format: 'json',
+    })) as { structuredContent: Record<string, unknown> };
+
+    expect(result.structuredContent.ok).toBe(false);
+    expect(result.structuredContent.message as string).toMatch(/No TeamDynamix ticket application ID/);
+  });
+
+  it('returns error when get_current_user fetch fails', async () => {
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Network failure'));
+
+    const result = (await callTool(server, 'teamdynamix_get_current_user', {
+      response_format: 'json',
+    })) as { structuredContent: Record<string, unknown> };
+
+    expect(result.structuredContent.ok).toBe(false);
+    expect(result.structuredContent.message as string).toMatch(/Network failure/);
+  });
+
+  it('returns error when list_applications fetch fails', async () => {
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Connection refused'));
+
+    const result = (await callTool(server, 'teamdynamix_list_applications', {
+      response_format: 'json',
+    })) as { structuredContent: Record<string, unknown> };
+
+    expect(result.structuredContent.ok).toBe(false);
+  });
+
+  it('returns error when list_ticket_statuses fetch fails', async () => {
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Timeout'));
+
+    const result = (await callTool(server, 'teamdynamix_list_ticket_statuses', {
+      app_id: 123,
+      response_format: 'json',
+    })) as { structuredContent: Record<string, unknown> };
+
+    expect(result.structuredContent.ok).toBe(false);
+  });
 });
 
 describe('teamdynamix ticket tools', () => {
@@ -211,6 +272,43 @@ describe('teamdynamix ticket tools', () => {
 
     const types = result.structuredContent.types as unknown[];
     expect(types).toHaveLength(2);
+  });
+
+  it('returns isError when get_ticket fetch fails', async () => {
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('API unavailable'));
+
+    const result = (await callTool(server, 'teamdynamix_get_ticket', {
+      app_id: 123,
+      ticket_id: 9001,
+      response_format: 'json',
+    })) as { isError: boolean };
+
+    expect(result.isError).toBe(true);
+  });
+
+  it('returns isError when search_tickets fetch fails', async () => {
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('API unavailable'));
+
+    const result = (await callTool(server, 'teamdynamix_search_tickets', {
+      app_id: 123,
+      search: { Keywords: 'test' },
+      response_format: 'json',
+    })) as { isError: boolean };
+
+    expect(result.isError).toBe(true);
+  });
+
+  it('returns isError when update_ticket fetch fails', async () => {
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('API unavailable'));
+
+    const result = (await callTool(server, 'teamdynamix_update_ticket', {
+      app_id: 123,
+      ticket_id: 9001,
+      patch: [{ op: 'replace', path: 'StatusID', value: 2 }],
+      response_format: 'json',
+    })) as { isError: boolean };
+
+    expect(result.isError).toBe(true);
   });
 });
 

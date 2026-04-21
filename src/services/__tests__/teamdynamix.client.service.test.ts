@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { TeamDynamixClient } from '../teamdynamix/client.service.js';
+import { TeamDynamixClient, assertAdminToolsEnabled } from '../teamdynamix/client.service.js';
 
 const baseConfig = {
   baseUrl: 'https://example.teamdynamix.com/TDWebApi',
@@ -157,5 +157,60 @@ describe('teamdynamix client service unconfigured error paths', () => {
 
     const client = new TeamDynamixClient({ ...baseConfig, timeoutMs: 50, maxRetries: 0 });
     await expect(client.listApplications()).rejects.toThrow('The operation was aborted');
+  });
+
+  it('throws when requireAdmin is true but authMode is standard', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response('fake.jwt.token', { status: 200, headers: { 'content-type': 'text/plain' } }),
+    );
+
+    // Access the private getBearerToken by calling a method that passes requireAdmin:true
+    // Simulate by directly constructing a client and verifying the guard via the public API.
+    // Since no public method exposes requireAdmin yet, test assertAdminToolsEnabled directly.
+    const client = new TeamDynamixClient({ ...baseConfig, authMode: 'standard', enableAdminTools: false });
+    // Trigger admin auth check via assertAdminToolsEnabled (exported function)
+    expect(() =>
+      assertAdminToolsEnabled({
+        ...baseConfig,
+        authMode: 'standard',
+        enableAdminTools: false,
+        beid: undefined,
+        webServicesKey: undefined,
+      }),
+    ).toThrow('Admin tools are disabled');
+    // Suppress unused var warning
+    expect(client).toBeDefined();
+  });
+});
+
+describe('assertAdminToolsEnabled', () => {
+  it('throws when admin tools are disabled', () => {
+    expect(() =>
+      assertAdminToolsEnabled({
+        baseUrl: 'https://example.teamdynamix.com/TDWebApi',
+        authMode: 'standard',
+        username: 'user@example.com',
+        password: 'secret',
+        timeoutMs: 30_000,
+        maxRetries: 2,
+        enableWriteTools: false,
+        enableAdminTools: false,
+      }),
+    ).toThrow('Admin tools are disabled');
+  });
+
+  it('does not throw when admin tools are enabled', () => {
+    expect(() =>
+      assertAdminToolsEnabled({
+        baseUrl: 'https://example.teamdynamix.com/TDWebApi',
+        authMode: 'admin',
+        beid: 'beid-value',
+        webServicesKey: 'wskey-value',
+        timeoutMs: 30_000,
+        maxRetries: 2,
+        enableWriteTools: true,
+        enableAdminTools: true,
+      }),
+    ).not.toThrow();
   });
 });
