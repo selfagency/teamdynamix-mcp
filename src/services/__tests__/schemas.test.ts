@@ -7,6 +7,15 @@ import {
   TeamDynamixTicketSchema,
   TeamDynamixUserSchema,
 } from '../../schemas/index.js';
+import {
+  AssetSearchSchema,
+  KbArticleCreateSchema,
+  KbArticleSearchSchema,
+  TicketCommentSchema,
+  TicketCreateSchema,
+  TicketSearchSchema,
+  UserSearchSchema,
+} from '../../schemas/teamdynamix/index.js';
 
 describe('TeamDynamix Response Schemas', () => {
   describe('TeamDynamixApplicationSchema', () => {
@@ -186,6 +195,114 @@ describe('TeamDynamix Response Schemas', () => {
         NullField: null,
       };
       expect(() => TeamDynamixSingleResponseSchema.parse(complexEntity)).not.toThrow();
+    });
+  });
+});
+
+describe('TeamDynamix Input Schema Bounds', () => {
+  describe('TicketSearchSchema', () => {
+    it('accepts a valid search payload', () => {
+      expect(() => TicketSearchSchema.parse({ Keywords: 'printer', MaxResults: 10 })).not.toThrow();
+    });
+
+    it('rejects Keywords exceeding 500 characters', () => {
+      expect(() => TicketSearchSchema.parse({ Keywords: 'a'.repeat(501) })).toThrow();
+    });
+
+    it('accepts Keywords at exactly the 500-character limit', () => {
+      expect(() => TicketSearchSchema.parse({ Keywords: 'a'.repeat(500) })).not.toThrow();
+    });
+  });
+
+  describe('TicketCreateSchema', () => {
+    const base = { TypeID: 1, Title: 'Test ticket' };
+
+    it('accepts a valid create payload', () => {
+      expect(() => TicketCreateSchema.parse(base)).not.toThrow();
+    });
+
+    it('rejects Title exceeding 500 characters', () => {
+      expect(() => TicketCreateSchema.parse({ ...base, Title: 'x'.repeat(501) })).toThrow();
+    });
+
+    it('accepts Title at exactly the 500-character limit', () => {
+      expect(() => TicketCreateSchema.parse({ ...base, Title: 'x'.repeat(500) })).not.toThrow();
+    });
+
+    it('rejects Description exceeding 65535 characters', () => {
+      expect(() => TicketCreateSchema.parse({ ...base, Description: 'x'.repeat(65536) })).toThrow();
+    });
+
+    it('accepts Description at the limit', () => {
+      expect(() => TicketCreateSchema.parse({ ...base, Description: 'x'.repeat(65535) })).not.toThrow();
+    });
+  });
+
+  describe('TicketCommentSchema', () => {
+    it('rejects Body exceeding 65535 characters', () => {
+      expect(() => TicketCommentSchema.parse({ TicketID: 1, Body: 'x'.repeat(65536) })).toThrow();
+    });
+
+    it('accepts Body at the limit', () => {
+      expect(() => TicketCommentSchema.parse({ TicketID: 1, Body: 'x'.repeat(65535) })).not.toThrow();
+    });
+  });
+
+  describe('UserSearchSchema', () => {
+    it('rejects SearchText exceeding 500 characters', () => {
+      expect(() => UserSearchSchema.parse({ SearchText: 'a'.repeat(501) })).toThrow();
+    });
+
+    it('accepts SearchText at the limit', () => {
+      expect(() => UserSearchSchema.parse({ SearchText: 'a'.repeat(500) })).not.toThrow();
+    });
+  });
+
+  describe('KbArticleSearchSchema', () => {
+    it('rejects SearchText exceeding 500 characters', () => {
+      expect(() => KbArticleSearchSchema.parse({ SearchText: 'x'.repeat(501) })).toThrow();
+    });
+  });
+
+  describe('KbArticleCreateSchema', () => {
+    const base = { Subject: 'How to reset password', Body: '<p>Steps here</p>' };
+
+    it('accepts a valid article payload', () => {
+      expect(() => KbArticleCreateSchema.parse(base)).not.toThrow();
+    });
+
+    it('rejects Subject exceeding 500 characters', () => {
+      expect(() => KbArticleCreateSchema.parse({ ...base, Subject: 'x'.repeat(501) })).toThrow();
+    });
+
+    it('rejects Body exceeding 500000 characters', () => {
+      expect(() => KbArticleCreateSchema.parse({ ...base, Body: 'x'.repeat(500001) })).toThrow();
+    });
+
+    it('rejects Summary exceeding 2000 characters', () => {
+      expect(() => KbArticleCreateSchema.parse({ ...base, Summary: 'x'.repeat(2001) })).toThrow();
+    });
+
+    it('rejects Tags exceeding 1000 characters', () => {
+      expect(() => KbArticleCreateSchema.parse({ ...base, Tags: 'x'.repeat(1001) })).toThrow();
+    });
+  });
+
+  describe('AssetSearchSchema', () => {
+    it('rejects SerialLike exceeding 200 characters', () => {
+      expect(() => AssetSearchSchema.parse({ SerialLike: 'x'.repeat(201) })).toThrow();
+    });
+
+    it('rejects TagLike exceeding 200 characters', () => {
+      expect(() => AssetSearchSchema.parse({ TagLike: 'x'.repeat(201) })).toThrow();
+    });
+
+    it('rejects SearchText exceeding 500 characters', () => {
+      expect(() => AssetSearchSchema.parse({ SearchText: 'x'.repeat(501) })).toThrow();
+    });
+
+    it('accepts valid asset search payload', () => {
+      expect(() => AssetSearchSchema.parse({ SerialLike: 'SN123', TagLike: 'ASSET-001' })).not.toThrow();
     });
   });
 });

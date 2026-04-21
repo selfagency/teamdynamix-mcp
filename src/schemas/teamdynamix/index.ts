@@ -12,7 +12,7 @@ export const TeamDynamixResponseFormatSchema = ResponseFormatSchema;
 // ---------------------------------------------------------------------------
 
 export const TicketSearchSchema = z.object({
-  Keywords: z.string().optional().describe('Full-text search term.'),
+  Keywords: z.string().max(500).optional().describe('Full-text search term.'),
   MaxResults: z.number().int().min(1).max(1000).optional().default(50).describe('Maximum results to return (1–1000).'),
   StatusIDs: z.array(z.number().int()).optional().describe('Filter by ticket status IDs.'),
   TypeIDs: z.array(z.number().int()).optional().describe('Filter by ticket type IDs.'),
@@ -29,20 +29,20 @@ export const TicketSearchSchema = z.object({
   ModifiedDateTo: z.string().optional().describe('ISO 8601 end date for last-modified filter.'),
   ClosedDateFrom: z.string().optional().describe('ISO 8601 start date for closed date filter.'),
   ClosedDateTo: z.string().optional().describe('ISO 8601 end date for closed date filter.'),
-  SortBy: z.string().optional().describe('Field name to sort results by.'),
+  SortBy: z.string().max(100).optional().describe('Field name to sort results by.'),
   SortOrder: z.enum(['A', 'D']).optional().describe('Sort order: A = ascending, D = descending.'),
 });
 
 export const TicketCreateSchema = z.object({
   TypeID: z.number().int().positive().describe('Ticket type ID.'),
-  Title: z.string().min(1).describe('Ticket title/subject.'),
+  Title: z.string().min(1).max(500).describe('Ticket title/subject.'),
   AccountID: z.number().int().positive().optional().describe('Account/department ID.'),
   StatusID: z.number().int().nonnegative().optional().describe('Initial ticket status ID.'),
   PriorityID: z.number().int().nonnegative().optional().describe('Ticket priority ID.'),
   UrgencyID: z.number().int().nonnegative().optional().describe('Ticket urgency ID.'),
   ImpactID: z.number().int().nonnegative().optional().describe('Ticket impact ID.'),
   SourceID: z.number().int().nonnegative().optional().describe('Ticket source ID.'),
-  Description: z.string().optional().describe('Full description/body of the ticket (HTML supported).'),
+  Description: z.string().max(65535).optional().describe('Full description/body of the ticket (HTML supported).'),
   RequestorUID: z.string().uuid().optional().describe('GUID of the requestor.'),
   ResponsibleUID: z.string().uuid().optional().describe('GUID of the responsible technician.'),
   ResponsibleGroupID: z.number().int().positive().optional().describe('Responsible group ID.'),
@@ -67,13 +67,13 @@ export const TicketPatchSchema = z.object({
     ),
   NotifyRequestor: z.boolean().optional().default(false).describe('Notify the requestor of the change.'),
   NotifyResponsible: z.boolean().optional().default(false).describe('Notify the responsible technician of the change.'),
-  Comments: z.string().optional().describe('Comment to attach to this update.'),
+  Comments: z.string().max(65535).optional().describe('Comment to attach to this update.'),
   IsPrivate: z.boolean().optional().default(false).describe('Whether the comment is private.'),
 });
 
 export const TicketCommentSchema = z.object({
   TicketID: z.number().int().positive().describe('Ticket ID to comment on.'),
-  Body: z.string().min(1).describe('Comment body (HTML supported).'),
+  Body: z.string().min(1).max(65535).describe('Comment body (HTML supported).'),
   IsPrivate: z.boolean().optional().default(false).describe('Whether this comment is private.'),
   NotifyRequestor: z.boolean().optional().default(false).describe('Notify the requestor.'),
   NotifyResponsible: z.boolean().optional().default(false).describe('Notify the responsible technician.'),
@@ -84,7 +84,7 @@ export const TicketCommentSchema = z.object({
 // ---------------------------------------------------------------------------
 
 export const UserSearchSchema = z.object({
-  SearchText: z.string().optional().describe('Name, username, or email to search for.'),
+  SearchText: z.string().max(500).optional().describe('Name, username, or email to search for.'),
   IsActive: z.boolean().optional().describe('Filter by active (true) or inactive (false) users.'),
   IsEmployee: z.boolean().optional().describe('Filter to employees only.'),
   AppID: z.number().int().positive().optional().describe('Scope search to a specific application.'),
@@ -92,7 +92,7 @@ export const UserSearchSchema = z.object({
 });
 
 export const GroupSearchSchema = z.object({
-  NameLike: z.string().optional().describe('Partial group name to search.'),
+  NameLike: z.string().max(500).optional().describe('Partial group name to search.'),
   IsActive: z.boolean().optional().describe('Filter by active (true) or inactive (false) groups.'),
   AppID: z.number().int().positive().optional().describe('Scope search to a specific application.'),
 });
@@ -102,7 +102,7 @@ export const GroupSearchSchema = z.object({
 // ---------------------------------------------------------------------------
 
 export const KbArticleSearchSchema = z.object({
-  SearchText: z.string().optional().describe('Full-text search within articles.'),
+  SearchText: z.string().max(500).optional().describe('Full-text search within articles.'),
   CategoryID: z.number().int().positive().optional().describe('Filter by KB category ID.'),
   IsPublished: z.boolean().optional().describe('Filter to published articles only.'),
   MaxResults: z.number().int().min(1).max(500).optional().default(25).describe('Maximum results (1–500).'),
@@ -113,9 +113,9 @@ export const KbArticleSearchSchema = z.object({
 // ---------------------------------------------------------------------------
 
 export const AssetSearchSchema = z.object({
-  SerialLike: z.string().optional().describe('Partial serial number to match.'),
-  TagLike: z.string().optional().describe('Partial asset tag to match.'),
-  SearchText: z.string().optional().describe('General text search across asset fields.'),
+  SerialLike: z.string().max(200).optional().describe('Partial serial number to match.'),
+  TagLike: z.string().max(200).optional().describe('Partial asset tag to match.'),
+  SearchText: z.string().max(500).optional().describe('General text search across asset fields.'),
   StatusIDs: z.array(z.number().int()).optional().describe('Filter by asset status IDs.'),
   OwnerUID: z.string().uuid().optional().describe('Filter by asset owner GUID.'),
   UsingDepartmentID: z.number().int().positive().optional().describe('Filter by using department ID.'),
@@ -127,7 +127,7 @@ export const AssetSearchSchema = z.object({
 // ---------------------------------------------------------------------------
 
 export const ServiceSearchSchema = z.object({
-  SearchText: z.string().optional().describe('Full-text search across service fields.'),
+  SearchText: z.string().max(500).optional().describe('Full-text search across service fields.'),
   IsActive: z.boolean().optional().describe('Filter to active services only.'),
   CategoryID: z.number().int().positive().optional().describe('Filter by service category ID.'),
   MaxResults: z.number().int().min(1).max(500).optional().default(25).describe('Maximum results (1–500).'),
@@ -138,7 +138,7 @@ export const ServiceSearchSchema = z.object({
 // ---------------------------------------------------------------------------
 
 export const ProjectSearchSchema = z.object({
-  NameLike: z.string().optional().describe('Partial project name to search.'),
+  NameLike: z.string().max(500).optional().describe('Partial project name to search.'),
   TypeIDs: z.array(z.number().int()).optional().describe('Filter by project type IDs.'),
   IsActive: z.boolean().optional().describe('Filter to active projects.'),
   ManagerUID: z.string().uuid().optional().describe('Filter by project manager GUID.'),
@@ -151,8 +151,8 @@ export const ProjectSearchSchema = z.object({
 
 export const TicketTaskCreateSchema = z.object({
   TicketID: z.number().int().positive().describe('Parent ticket ID.'),
-  Title: z.string().min(1).describe('Task title.'),
-  Description: z.string().optional().describe('Task description.'),
+  Title: z.string().min(1).max(500).describe('Task title.'),
+  Description: z.string().max(65535).optional().describe('Task description.'),
   IsActive: z.boolean().optional().default(true).describe('Whether the task is active.'),
   AssignedUID: z.string().uuid().optional().describe('GUID of the assigned user.'),
   AssignedGroupID: z.number().int().positive().optional().describe('Assigned group ID.'),
@@ -166,12 +166,12 @@ export const TicketTaskCreateSchema = z.object({
 // ---------------------------------------------------------------------------
 
 export const KbArticleCreateSchema = z.object({
-  Subject: z.string().min(1).describe('Article title/subject.'),
-  Body: z.string().min(1).describe('Article body content (HTML supported).'),
-  Summary: z.string().optional().describe('Short article summary.'),
+  Subject: z.string().min(1).max(500).describe('Article title/subject.'),
+  Body: z.string().min(1).max(500000).describe('Article body content (HTML supported).'),
+  Summary: z.string().max(2000).optional().describe('Short article summary.'),
   CategoryID: z.number().int().positive().optional().describe('KB category ID.'),
   IsPublished: z.boolean().optional().default(false).describe('Whether to publish the article immediately.'),
-  Tags: z.string().optional().describe('Comma-separated tags for the article.'),
+  Tags: z.string().max(1000).optional().describe('Comma-separated tags for the article.'),
 });
 
 export const KbArticleUpdateSchema = KbArticleCreateSchema.partial().extend({
@@ -183,7 +183,7 @@ export const KbArticleUpdateSchema = KbArticleCreateSchema.partial().extend({
 // ---------------------------------------------------------------------------
 
 export const CiSearchSchema = z.object({
-  SearchText: z.string().optional().describe('Full-text search across CI fields.'),
+  SearchText: z.string().max(500).optional().describe('Full-text search across CI fields.'),
   TypeIDs: z.array(z.number().int()).optional().describe('Filter by CI type IDs.'),
   OwnerUID: z.string().uuid().optional().describe('Filter by owner GUID.'),
   MaxResults: z.number().int().min(1).max(1000).optional().default(25).describe('Maximum results (1–1000).'),
@@ -206,8 +206,8 @@ export const CustomAttributeComponentIdSchema = z
 // ---------------------------------------------------------------------------
 
 export const ProjectIssueCreateSchema = z.object({
-  Title: z.string().min(1).describe('Issue title.'),
-  Description: z.string().optional().describe('Issue description.'),
+  Title: z.string().min(1).max(500).describe('Issue title.'),
+  Description: z.string().max(65535).optional().describe('Issue description.'),
   AssignedUID: z.string().uuid().optional().describe('GUID of the assigned user.'),
   StatusID: z.number().int().nonnegative().optional().describe('Issue status ID.'),
   PriorityID: z.number().int().nonnegative().optional().describe('Issue priority ID.'),
@@ -215,8 +215,8 @@ export const ProjectIssueCreateSchema = z.object({
 });
 
 export const ProjectRiskCreateSchema = z.object({
-  Title: z.string().min(1).describe('Risk title.'),
-  Description: z.string().optional().describe('Risk description.'),
+  Title: z.string().min(1).max(500).describe('Risk title.'),
+  Description: z.string().max(65535).optional().describe('Risk description.'),
   AssignedUID: z.string().uuid().optional().describe('GUID of the risk owner.'),
   StatusID: z.number().int().nonnegative().optional().describe('Risk status ID.'),
   Probability: z.number().int().min(1).max(100).optional().describe('Probability percentage (1–100).'),
