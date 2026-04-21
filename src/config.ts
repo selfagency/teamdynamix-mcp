@@ -19,12 +19,11 @@ export const SERVER_VERSION_OVERRIDE: string | undefined = process.env['MCP_SERV
 /**
  * Runtime log level used by starter tools and resources.
  */
-export const LOG_LEVEL: 'debug' | 'info' | 'warn' | 'error' =
-  process.env['MCP_LOG_LEVEL'] === 'debug' ||
-  process.env['MCP_LOG_LEVEL'] === 'warn' ||
-  process.env['MCP_LOG_LEVEL'] === 'error'
-    ? process.env['MCP_LOG_LEVEL']
-    : 'info';
+const validLogLevels = ['debug', 'info', 'warn', 'error'] as const;
+type LogLevel = (typeof validLogLevels)[number];
+const logLevelSchema = z.enum(validLogLevels);
+const parsedLogLevel = logLevelSchema.safeParse(process.env['MCP_LOG_LEVEL']?.trim());
+export const LOG_LEVEL: LogLevel = parsedLogLevel.success ? parsedLogLevel.data : 'info';
 
 function normalizeOptionalString(value: string | undefined): string | undefined {
   const normalized = value?.trim();
