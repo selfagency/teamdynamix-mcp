@@ -1,0 +1,36 @@
+src/services/__tests__/schemas.test.ts
+  0b21bb1e7af0e92a 19-25,317-325,327-330,332-335,337-340,342-346,348,350-355,357-359,361-363,365-369,371-373,375-377,379-381,383-385,387-388,390
+  h_5cf1e2c1161853 316,326,331,336,341,347,349,356,360,364,370,374,378,382,386,389
+.github/workflows/ci.yml
+  h_5cf1e2c1161853 31-35
+src/schemas/teamdynamix/index.ts
+  0b21bb1e7af0e92a 26-55,89,185-194,247-251,261-265,269-276
+  h_5cf1e2c1161853 88,91
+src/services/teamdynamix/client.service.ts
+  h_5cf1e2c1161853 178-182,185
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "2b5e7b9e3c95039e865f163f01a8ec0a3efd7f65",
+  "prompts": {
+    "0b21bb1e7af0e92a": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "4e8f2b89-7289-470d-b1c3-033926d86a9d",
+        "model": "copilot/auto"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 125,
+      "total_deletions": 127,
+      "accepted_lines": 128,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_5cf1e2c1161853": {
+      "author": "Daniel Sieradski"
+    }
+  }
+}
