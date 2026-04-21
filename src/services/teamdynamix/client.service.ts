@@ -88,11 +88,15 @@ class TokenBucket {
   }
 }
 
+const sharedRateLimiter = new TokenBucket(20, 2 / 1000);
+
 export class TeamDynamixClient {
   private cachedToken: CachedToken | null = null;
-  private readonly rateLimiter = new TokenBucket(20, 2 / 1000);
 
-  public constructor(private readonly config: TeamDynamixConfig) {}
+  public constructor(
+    private readonly config: TeamDynamixConfig,
+    private readonly rateLimiter: TokenBucket = sharedRateLimiter,
+  ) {}
 
   public async getCurrentUser(): Promise<TeamDynamixUser> {
     return await this.requestJson<TeamDynamixUser>('/api/auth/getuser');

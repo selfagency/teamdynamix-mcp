@@ -11,17 +11,15 @@ import {
   AssetSearchSchema,
   KbArticleCreateSchema,
   KbArticleSearchSchema,
-  TicketCommentSchema,
-  TicketCreateSchema,
-  TicketSearchSchema,
-  UserSearchSchema,
-} from '../../schemas/teamdynamix/index.js';
-import {
-  TicketPatchSchema,
-  TimeEntryQuerySchema,
-  TicketTaskCreateSchema,
   ProjectIssueCreateSchema,
   ProjectRiskCreateSchema,
+  TicketCommentSchema,
+  TicketCreateSchema,
+  TicketPatchSchema,
+  TicketSearchSchema,
+  TicketTaskCreateSchema,
+  TimeEntryQuerySchema,
+  UserSearchSchema,
 } from '../../schemas/teamdynamix/index.js';
 
 describe('TeamDynamix Response Schemas', () => {
