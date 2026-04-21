@@ -53,6 +53,9 @@ For admin mode, use `TEAMDYNAMIX_BEID` and `TEAMDYNAMIX_WEB_SERVICES_KEY` instea
 
 ## MCP client configuration
 
+> **Security notice:** Values shown above are placeholders. **Never commit real credentials to source control.**
+> Inject secrets at runtime via a `.env` file (excluded by `.gitignore`), CI/CD secrets, or a secret manager.
+
 ### VS Code (`.vscode/mcp.json`)
 
 ```json

@@ -55,10 +55,48 @@ function normalizePath(path: string): string {
   return path.startsWith('/') ? path : `/${path}`;
 }
 
+// Proactive token-bucket rate limiter — 2 req/sec sustained, burst of 20.
+// Prevents hitting server-side 429s in normal operation.
+class TokenBucket {
+  private tokens: number;
+  private lastRefillMs: number;
+
+  constructor(
+    private readonly capacity: number,
+    private readonly refillRatePerMs: number,
+  ) {
+    this.tokens = capacity;
+    this.lastRefillMs = Date.now();
+  }
+
+  private refill(): void {
+    const now = Date.now();
+    const elapsed = now - this.lastRefillMs;
+    this.tokens = Math.min(this.capacity, this.tokens + elapsed * this.refillRatePerMs);
+    this.lastRefillMs = now;
+  }
+
+  async acquire(): Promise<void> {
+    this.refill();
+    if (this.tokens >= 1) {
+      this.tokens -= 1;
+      return;
+    }
+    const waitMs = Math.ceil((1 - this.tokens) / this.refillRatePerMs);
+    await sleep(waitMs);
+    return this.acquire();
+  }
+}
+
+const sharedRateLimiter = new TokenBucket(20, 2 / 1000);
+
 export class TeamDynamixClient {
   private cachedToken: CachedToken | null = null;
 
-  public constructor(private readonly config: TeamDynamixConfig) {}
+  public constructor(
+    private readonly config: TeamDynamixConfig,
+    private readonly rateLimiter: TokenBucket = sharedRateLimiter,
+  ) {}
 
   public async getCurrentUser(): Promise<TeamDynamixUser> {
     return await this.requestJson<TeamDynamixUser>('/api/auth/getuser');
@@ -141,13 +179,14 @@ export class TeamDynamixClient {
     notifyRequestor = false,
     notifyResponsible = false,
   ): Promise<TeamDynamixTicket> {
-    return await this.requestJson<TeamDynamixTicket>(
-      `/api/${appId}/tickets?NotifyRequestor=${notifyRequestor}&NotifyResponsible=${notifyResponsible}`,
-      {
-        method: 'POST',
-        body: JSON.stringify(body),
-      },
-    );
+    const qs = new URLSearchParams({
+      NotifyRequestor: String(notifyRequestor),
+      NotifyResponsible: String(notifyResponsible),
+    });
+    return await this.requestJson<TeamDynamixTicket>(`/api/${appId}/tickets?${qs}`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
   }
 
   public async updateTicket(
@@ -456,6 +495,8 @@ export class TeamDynamixClient {
     const endpoint = `${this.config.baseUrl}${normalizePath(path)}`;
 
     const cappedRetries = Math.min(this.config.maxRetries, TEAMDYNAMIX_MAX_RETRY_ATTEMPTS);
+
+    await this.rateLimiter.acquire();
 
     for (let attempt = 0; attempt <= cappedRetries; attempt += 1) {
       const controller = new AbortController();

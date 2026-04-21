@@ -3,6 +3,19 @@ import { ResponseFormatSchema } from '../index.js';
 
 export const TeamDynamixAppIdSchema = z.number().int().positive().describe('TeamDynamix application ID.');
 
+/**
+ * Shared ISO-8601 date/datetime schema.
+ * Accepts `YYYY-MM-DD` (date only) or `YYYY-MM-DDTHH:mm`, `YYYY-MM-DDTHH:mm:ss`,
+ * `YYYY-MM-DDTHH:mm:ss.sss` with an optional timezone (`Z`, `+HH:MM`, `-HH:MM`).
+ * Rejects free-form strings such as `"tomorrow"` or `"2026-01-01T++++"`.
+ */
+export const IsoDateSchema = z
+  .string()
+  .regex(
+    /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?)?$/,
+    'Must be a valid ISO 8601 date string.',
+  );
+
 export const TeamDynamixGuidSchema = z.string().uuid().describe('TeamDynamix GUID identifier.');
 
 export const TeamDynamixResponseFormatSchema = ResponseFormatSchema;
@@ -12,7 +25,7 @@ export const TeamDynamixResponseFormatSchema = ResponseFormatSchema;
 // ---------------------------------------------------------------------------
 
 export const TicketSearchSchema = z.object({
-  Keywords: z.string().optional().describe('Full-text search term.'),
+  Keywords: z.string().max(500).optional().describe('Full-text search term.'),
   MaxResults: z.number().int().min(1).max(1000).optional().default(50).describe('Maximum results to return (1–1000).'),
   StatusIDs: z.array(z.number().int()).optional().describe('Filter by ticket status IDs.'),
   TypeIDs: z.array(z.number().int()).optional().describe('Filter by ticket type IDs.'),
@@ -23,26 +36,26 @@ export const TicketSearchSchema = z.object({
   ResponsibleGroupIDs: z.array(z.number().int()).optional().describe('Filter by responsible group IDs.'),
   ResponsibleUids: z.array(z.string().uuid()).optional().describe('Filter by responsible user GUIDs.'),
   RequestorUids: z.array(z.string().uuid()).optional().describe('Filter by requestor user GUIDs.'),
-  CreatedDateFrom: z.string().optional().describe('ISO 8601 start date for creation date filter.'),
-  CreatedDateTo: z.string().optional().describe('ISO 8601 end date for creation date filter.'),
-  ModifiedDateFrom: z.string().optional().describe('ISO 8601 start date for last-modified filter.'),
-  ModifiedDateTo: z.string().optional().describe('ISO 8601 end date for last-modified filter.'),
-  ClosedDateFrom: z.string().optional().describe('ISO 8601 start date for closed date filter.'),
-  ClosedDateTo: z.string().optional().describe('ISO 8601 end date for closed date filter.'),
-  SortBy: z.string().optional().describe('Field name to sort results by.'),
+  CreatedDateFrom: IsoDateSchema.optional().describe('ISO 8601 start date for creation date filter.'),
+  CreatedDateTo: IsoDateSchema.optional().describe('ISO 8601 end date for creation date filter.'),
+  ModifiedDateFrom: IsoDateSchema.optional().describe('ISO 8601 start date for last-modified filter.'),
+  ModifiedDateTo: IsoDateSchema.optional().describe('ISO 8601 end date for last-modified filter.'),
+  ClosedDateFrom: IsoDateSchema.optional().describe('ISO 8601 start date for closed date filter.'),
+  ClosedDateTo: IsoDateSchema.optional().describe('ISO 8601 end date for closed date filter.'),
+  SortBy: z.string().max(100).optional().describe('Field name to sort results by.'),
   SortOrder: z.enum(['A', 'D']).optional().describe('Sort order: A = ascending, D = descending.'),
 });
 
 export const TicketCreateSchema = z.object({
   TypeID: z.number().int().positive().describe('Ticket type ID.'),
-  Title: z.string().min(1).describe('Ticket title/subject.'),
+  Title: z.string().min(1).max(500).describe('Ticket title/subject.'),
   AccountID: z.number().int().positive().optional().describe('Account/department ID.'),
   StatusID: z.number().int().nonnegative().optional().describe('Initial ticket status ID.'),
   PriorityID: z.number().int().nonnegative().optional().describe('Ticket priority ID.'),
   UrgencyID: z.number().int().nonnegative().optional().describe('Ticket urgency ID.'),
   ImpactID: z.number().int().nonnegative().optional().describe('Ticket impact ID.'),
   SourceID: z.number().int().nonnegative().optional().describe('Ticket source ID.'),
-  Description: z.string().optional().describe('Full description/body of the ticket (HTML supported).'),
+  Description: z.string().max(65535).optional().describe('Full description/body of the ticket (HTML supported).'),
   RequestorUID: z.string().uuid().optional().describe('GUID of the requestor.'),
   ResponsibleUID: z.string().uuid().optional().describe('GUID of the responsible technician.'),
   ResponsibleGroupID: z.number().int().positive().optional().describe('Responsible group ID.'),
@@ -61,19 +74,20 @@ export const TicketCreateSchema = z.object({
 export const TicketPatchSchema = z.object({
   TicketID: z.number().int().positive().describe('Ticket ID to update.'),
   Attributes: z
-    .record(z.string(), z.string())
+    .record(z.string().max(100), z.string().max(65535))
+    .refine(obj => Object.keys(obj).length <= 50, { message: 'Attributes may contain at most 50 fields per update.' })
     .describe(
-      'Fields to update as key/value pairs. Keys must be valid ticket field names (e.g. "StatusID", "Title", "ResponsibleUID").',
+      'Fields to update as key/value pairs. Keys must be valid ticket field names (e.g. "StatusID", "Title", "ResponsibleUID"). Maximum 50 fields per update.',
     ),
   NotifyRequestor: z.boolean().optional().default(false).describe('Notify the requestor of the change.'),
   NotifyResponsible: z.boolean().optional().default(false).describe('Notify the responsible technician of the change.'),
-  Comments: z.string().optional().describe('Comment to attach to this update.'),
+  Comments: z.string().max(65535).optional().describe('Comment to attach to this update.'),
   IsPrivate: z.boolean().optional().default(false).describe('Whether the comment is private.'),
 });
 
 export const TicketCommentSchema = z.object({
   TicketID: z.number().int().positive().describe('Ticket ID to comment on.'),
-  Body: z.string().min(1).describe('Comment body (HTML supported).'),
+  Body: z.string().min(1).max(65535).describe('Comment body (HTML supported).'),
   IsPrivate: z.boolean().optional().default(false).describe('Whether this comment is private.'),
   NotifyRequestor: z.boolean().optional().default(false).describe('Notify the requestor.'),
   NotifyResponsible: z.boolean().optional().default(false).describe('Notify the responsible technician.'),
@@ -84,7 +98,7 @@ export const TicketCommentSchema = z.object({
 // ---------------------------------------------------------------------------
 
 export const UserSearchSchema = z.object({
-  SearchText: z.string().optional().describe('Name, username, or email to search for.'),
+  SearchText: z.string().max(500).optional().describe('Name, username, or email to search for.'),
   IsActive: z.boolean().optional().describe('Filter by active (true) or inactive (false) users.'),
   IsEmployee: z.boolean().optional().describe('Filter to employees only.'),
   AppID: z.number().int().positive().optional().describe('Scope search to a specific application.'),
@@ -92,7 +106,7 @@ export const UserSearchSchema = z.object({
 });
 
 export const GroupSearchSchema = z.object({
-  NameLike: z.string().optional().describe('Partial group name to search.'),
+  NameLike: z.string().max(500).optional().describe('Partial group name to search.'),
   IsActive: z.boolean().optional().describe('Filter by active (true) or inactive (false) groups.'),
   AppID: z.number().int().positive().optional().describe('Scope search to a specific application.'),
 });
@@ -102,7 +116,7 @@ export const GroupSearchSchema = z.object({
 // ---------------------------------------------------------------------------
 
 export const KbArticleSearchSchema = z.object({
-  SearchText: z.string().optional().describe('Full-text search within articles.'),
+  SearchText: z.string().max(500).optional().describe('Full-text search within articles.'),
   CategoryID: z.number().int().positive().optional().describe('Filter by KB category ID.'),
   IsPublished: z.boolean().optional().describe('Filter to published articles only.'),
   MaxResults: z.number().int().min(1).max(500).optional().default(25).describe('Maximum results (1–500).'),
@@ -113,9 +127,9 @@ export const KbArticleSearchSchema = z.object({
 // ---------------------------------------------------------------------------
 
 export const AssetSearchSchema = z.object({
-  SerialLike: z.string().optional().describe('Partial serial number to match.'),
-  TagLike: z.string().optional().describe('Partial asset tag to match.'),
-  SearchText: z.string().optional().describe('General text search across asset fields.'),
+  SerialLike: z.string().max(200).optional().describe('Partial serial number to match.'),
+  TagLike: z.string().max(200).optional().describe('Partial asset tag to match.'),
+  SearchText: z.string().max(500).optional().describe('General text search across asset fields.'),
   StatusIDs: z.array(z.number().int()).optional().describe('Filter by asset status IDs.'),
   OwnerUID: z.string().uuid().optional().describe('Filter by asset owner GUID.'),
   UsingDepartmentID: z.number().int().positive().optional().describe('Filter by using department ID.'),
@@ -127,7 +141,7 @@ export const AssetSearchSchema = z.object({
 // ---------------------------------------------------------------------------
 
 export const ServiceSearchSchema = z.object({
-  SearchText: z.string().optional().describe('Full-text search across service fields.'),
+  SearchText: z.string().max(500).optional().describe('Full-text search across service fields.'),
   IsActive: z.boolean().optional().describe('Filter to active services only.'),
   CategoryID: z.number().int().positive().optional().describe('Filter by service category ID.'),
   MaxResults: z.number().int().min(1).max(500).optional().default(25).describe('Maximum results (1–500).'),
@@ -138,7 +152,7 @@ export const ServiceSearchSchema = z.object({
 // ---------------------------------------------------------------------------
 
 export const ProjectSearchSchema = z.object({
-  NameLike: z.string().optional().describe('Partial project name to search.'),
+  NameLike: z.string().max(500).optional().describe('Partial project name to search.'),
   TypeIDs: z.array(z.number().int()).optional().describe('Filter by project type IDs.'),
   IsActive: z.boolean().optional().describe('Filter to active projects.'),
   ManagerUID: z.string().uuid().optional().describe('Filter by project manager GUID.'),
@@ -151,14 +165,14 @@ export const ProjectSearchSchema = z.object({
 
 export const TicketTaskCreateSchema = z.object({
   TicketID: z.number().int().positive().describe('Parent ticket ID.'),
-  Title: z.string().min(1).describe('Task title.'),
-  Description: z.string().optional().describe('Task description.'),
+  Title: z.string().min(1).max(500).describe('Task title.'),
+  Description: z.string().max(65535).optional().describe('Task description.'),
   IsActive: z.boolean().optional().default(true).describe('Whether the task is active.'),
   AssignedUID: z.string().uuid().optional().describe('GUID of the assigned user.'),
   AssignedGroupID: z.number().int().positive().optional().describe('Assigned group ID.'),
   EstimatedMinutes: z.number().int().nonnegative().optional().describe('Estimated minutes to complete.'),
-  StartDate: z.string().optional().describe('Task start date (ISO 8601).'),
-  EndDate: z.string().optional().describe('Task due date (ISO 8601).'),
+  StartDate: IsoDateSchema.optional().describe('Task start date (ISO 8601).'),
+  EndDate: IsoDateSchema.optional().describe('Task due date (ISO 8601).'),
 });
 
 // ---------------------------------------------------------------------------
@@ -166,12 +180,12 @@ export const TicketTaskCreateSchema = z.object({
 // ---------------------------------------------------------------------------
 
 export const KbArticleCreateSchema = z.object({
-  Subject: z.string().min(1).describe('Article title/subject.'),
-  Body: z.string().min(1).describe('Article body content (HTML supported).'),
-  Summary: z.string().optional().describe('Short article summary.'),
+  Subject: z.string().min(1).max(500).describe('Article title/subject.'),
+  Body: z.string().min(1).max(500000).describe('Article body content (HTML supported).'),
+  Summary: z.string().max(2000).optional().describe('Short article summary.'),
   CategoryID: z.number().int().positive().optional().describe('KB category ID.'),
   IsPublished: z.boolean().optional().default(false).describe('Whether to publish the article immediately.'),
-  Tags: z.string().optional().describe('Comma-separated tags for the article.'),
+  Tags: z.string().max(1000).optional().describe('Comma-separated tags for the article.'),
 });
 
 export const KbArticleUpdateSchema = KbArticleCreateSchema.partial().extend({
@@ -183,7 +197,7 @@ export const KbArticleUpdateSchema = KbArticleCreateSchema.partial().extend({
 // ---------------------------------------------------------------------------
 
 export const CiSearchSchema = z.object({
-  SearchText: z.string().optional().describe('Full-text search across CI fields.'),
+  SearchText: z.string().max(500).optional().describe('Full-text search across CI fields.'),
   TypeIDs: z.array(z.number().int()).optional().describe('Filter by CI type IDs.'),
   OwnerUID: z.string().uuid().optional().describe('Filter by owner GUID.'),
   MaxResults: z.number().int().min(1).max(1000).optional().default(25).describe('Maximum results (1–1000).'),
@@ -206,27 +220,27 @@ export const CustomAttributeComponentIdSchema = z
 // ---------------------------------------------------------------------------
 
 export const ProjectIssueCreateSchema = z.object({
-  Title: z.string().min(1).describe('Issue title.'),
-  Description: z.string().optional().describe('Issue description.'),
+  Title: z.string().min(1).max(500).describe('Issue title.'),
+  Description: z.string().max(65535).optional().describe('Issue description.'),
   AssignedUID: z.string().uuid().optional().describe('GUID of the assigned user.'),
   StatusID: z.number().int().nonnegative().optional().describe('Issue status ID.'),
   PriorityID: z.number().int().nonnegative().optional().describe('Issue priority ID.'),
-  DueDate: z.string().optional().describe('Issue due date (ISO 8601).'),
+  DueDate: IsoDateSchema.optional().describe('Issue due date (ISO 8601).'),
 });
 
 export const ProjectRiskCreateSchema = z.object({
-  Title: z.string().min(1).describe('Risk title.'),
-  Description: z.string().optional().describe('Risk description.'),
+  Title: z.string().min(1).max(500).describe('Risk title.'),
+  Description: z.string().max(65535).optional().describe('Risk description.'),
   AssignedUID: z.string().uuid().optional().describe('GUID of the risk owner.'),
   StatusID: z.number().int().nonnegative().optional().describe('Risk status ID.'),
   Probability: z.number().int().min(1).max(100).optional().describe('Probability percentage (1–100).'),
   Impact: z.number().int().min(1).max(5).optional().describe('Impact level (1 = low, 5 = critical).'),
-  DueDate: z.string().optional().describe('Risk resolution due date (ISO 8601).'),
+  DueDate: IsoDateSchema.optional().describe('Risk resolution due date (ISO 8601).'),
 });
 
 export const TimeEntryQuerySchema = z.object({
-  StartDate: z.string().describe('Start date for time entries query (ISO 8601 date, e.g. 2026-01-01).'),
-  EndDate: z.string().describe('End date for time entries query (ISO 8601 date, e.g. 2026-01-31).'),
+  StartDate: IsoDateSchema.describe('Start date for time entries query (ISO 8601 date, e.g. 2026-01-01).'),
+  EndDate: IsoDateSchema.describe('End date for time entries query (ISO 8601 date, e.g. 2026-01-31).'),
 });
 
 // ---------------------------------------------------------------------------
