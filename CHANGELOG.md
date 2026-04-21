@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-04-21
+
+## What's Changed
+
+- fix: codebase audit remediation (F1–F8) by @selfagency in https://github.com/selfagency/teamdynamix-mcp/pull/4
+- security: harden MCP input validation and CI secret scanning by @selfagency in https://github.com/selfagency/teamdynamix-mcp/pull/5
+
+**Full Changelog**: https://github.com/selfagency/teamdynamix-mcp/compare/v0.1.0...v0.1.1
+
+_Source: changes from v0.1.0 to v0.1.1._
+
 ## [0.1.0] - 2026-04-20
 
 ## What's Changed
