@@ -175,13 +175,14 @@ export class TeamDynamixClient {
     notifyRequestor = false,
     notifyResponsible = false,
   ): Promise<TeamDynamixTicket> {
-    return await this.requestJson<TeamDynamixTicket>(
-      `/api/${appId}/tickets?NotifyRequestor=${notifyRequestor}&NotifyResponsible=${notifyResponsible}`,
-      {
-        method: 'POST',
-        body: JSON.stringify(body),
-      },
-    );
+    const qs = new URLSearchParams({
+      NotifyRequestor: String(notifyRequestor),
+      NotifyResponsible: String(notifyResponsible),
+    });
+    return await this.requestJson<TeamDynamixTicket>(`/api/${appId}/tickets?${qs}`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
   }
 
   public async updateTicket(

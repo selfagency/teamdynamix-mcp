@@ -23,12 +23,36 @@ export const TicketSearchSchema = z.object({
   ResponsibleGroupIDs: z.array(z.number().int()).optional().describe('Filter by responsible group IDs.'),
   ResponsibleUids: z.array(z.string().uuid()).optional().describe('Filter by responsible user GUIDs.'),
   RequestorUids: z.array(z.string().uuid()).optional().describe('Filter by requestor user GUIDs.'),
-  CreatedDateFrom: z.string().optional().describe('ISO 8601 start date for creation date filter.'),
-  CreatedDateTo: z.string().optional().describe('ISO 8601 end date for creation date filter.'),
-  ModifiedDateFrom: z.string().optional().describe('ISO 8601 start date for last-modified filter.'),
-  ModifiedDateTo: z.string().optional().describe('ISO 8601 end date for last-modified filter.'),
-  ClosedDateFrom: z.string().optional().describe('ISO 8601 start date for closed date filter.'),
-  ClosedDateTo: z.string().optional().describe('ISO 8601 end date for closed date filter.'),
+  CreatedDateFrom: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}(T[\d:.Z+-]+)?$/)
+    .optional()
+    .describe('ISO 8601 start date for creation date filter.'),
+  CreatedDateTo: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}(T[\d:.Z+-]+)?$/)
+    .optional()
+    .describe('ISO 8601 end date for creation date filter.'),
+  ModifiedDateFrom: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}(T[\d:.Z+-]+)?$/)
+    .optional()
+    .describe('ISO 8601 start date for last-modified filter.'),
+  ModifiedDateTo: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}(T[\d:.Z+-]+)?$/)
+    .optional()
+    .describe('ISO 8601 end date for last-modified filter.'),
+  ClosedDateFrom: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}(T[\d:.Z+-]+)?$/)
+    .optional()
+    .describe('ISO 8601 start date for closed date filter.'),
+  ClosedDateTo: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}(T[\d:.Z+-]+)?$/)
+    .optional()
+    .describe('ISO 8601 end date for closed date filter.'),
   SortBy: z.string().max(100).optional().describe('Field name to sort results by.'),
   SortOrder: z.enum(['A', 'D']).optional().describe('Sort order: A = ascending, D = descending.'),
 });
@@ -61,9 +85,10 @@ export const TicketCreateSchema = z.object({
 export const TicketPatchSchema = z.object({
   TicketID: z.number().int().positive().describe('Ticket ID to update.'),
   Attributes: z
-    .record(z.string(), z.string())
+    .record(z.string().max(100), z.string().max(65535))
+    .refine(obj => Object.keys(obj).length <= 50, { message: 'Attributes may contain at most 50 fields per update.' })
     .describe(
-      'Fields to update as key/value pairs. Keys must be valid ticket field names (e.g. "StatusID", "Title", "ResponsibleUID").',
+      'Fields to update as key/value pairs. Keys must be valid ticket field names (e.g. "StatusID", "Title", "ResponsibleUID"). Maximum 50 fields per update.',
     ),
   NotifyRequestor: z.boolean().optional().default(false).describe('Notify the requestor of the change.'),
   NotifyResponsible: z.boolean().optional().default(false).describe('Notify the responsible technician of the change.'),
@@ -157,8 +182,16 @@ export const TicketTaskCreateSchema = z.object({
   AssignedUID: z.string().uuid().optional().describe('GUID of the assigned user.'),
   AssignedGroupID: z.number().int().positive().optional().describe('Assigned group ID.'),
   EstimatedMinutes: z.number().int().nonnegative().optional().describe('Estimated minutes to complete.'),
-  StartDate: z.string().optional().describe('Task start date (ISO 8601).'),
-  EndDate: z.string().optional().describe('Task due date (ISO 8601).'),
+  StartDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}(T[\d:.Z+-]+)?$/)
+    .optional()
+    .describe('Task start date (ISO 8601).'),
+  EndDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}(T[\d:.Z+-]+)?$/)
+    .optional()
+    .describe('Task due date (ISO 8601).'),
 });
 
 // ---------------------------------------------------------------------------
@@ -211,7 +244,11 @@ export const ProjectIssueCreateSchema = z.object({
   AssignedUID: z.string().uuid().optional().describe('GUID of the assigned user.'),
   StatusID: z.number().int().nonnegative().optional().describe('Issue status ID.'),
   PriorityID: z.number().int().nonnegative().optional().describe('Issue priority ID.'),
-  DueDate: z.string().optional().describe('Issue due date (ISO 8601).'),
+  DueDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}(T[\d:.Z+-]+)?$/)
+    .optional()
+    .describe('Issue due date (ISO 8601).'),
 });
 
 export const ProjectRiskCreateSchema = z.object({
@@ -221,12 +258,22 @@ export const ProjectRiskCreateSchema = z.object({
   StatusID: z.number().int().nonnegative().optional().describe('Risk status ID.'),
   Probability: z.number().int().min(1).max(100).optional().describe('Probability percentage (1–100).'),
   Impact: z.number().int().min(1).max(5).optional().describe('Impact level (1 = low, 5 = critical).'),
-  DueDate: z.string().optional().describe('Risk resolution due date (ISO 8601).'),
+  DueDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}(T[\d:.Z+-]+)?$/)
+    .optional()
+    .describe('Risk resolution due date (ISO 8601).'),
 });
 
 export const TimeEntryQuerySchema = z.object({
-  StartDate: z.string().describe('Start date for time entries query (ISO 8601 date, e.g. 2026-01-01).'),
-  EndDate: z.string().describe('End date for time entries query (ISO 8601 date, e.g. 2026-01-31).'),
+  StartDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}(T[\d:.Z+-]+)?$/)
+    .describe('Start date for time entries query (ISO 8601 date, e.g. 2026-01-01).'),
+  EndDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}(T[\d:.Z+-]+)?$/)
+    .describe('End date for time entries query (ISO 8601 date, e.g. 2026-01-31).'),
 });
 
 // ---------------------------------------------------------------------------

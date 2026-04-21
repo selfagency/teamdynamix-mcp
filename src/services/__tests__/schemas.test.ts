@@ -16,6 +16,13 @@ import {
   TicketSearchSchema,
   UserSearchSchema,
 } from '../../schemas/teamdynamix/index.js';
+import {
+  TicketPatchSchema,
+  TimeEntryQuerySchema,
+  TicketTaskCreateSchema,
+  ProjectIssueCreateSchema,
+  ProjectRiskCreateSchema,
+} from '../../schemas/teamdynamix/index.js';
 
 describe('TeamDynamix Response Schemas', () => {
   describe('TeamDynamixApplicationSchema', () => {
@@ -304,5 +311,80 @@ describe('TeamDynamix Input Schema Bounds', () => {
     it('accepts valid asset search payload', () => {
       expect(() => AssetSearchSchema.parse({ SerialLike: 'SN123', TagLike: 'ASSET-001' })).not.toThrow();
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Security regression tests
+// ---------------------------------------------------------------------------
+
+describe('Security: TicketPatchSchema.Attributes bounds', () => {
+  it('accepts a valid Attributes map (≤50 keys, keys ≤100 chars, values ≤65535 chars)', () => {
+    const attrs = Object.fromEntries(Array.from({ length: 5 }, (_, i) => [`Field${i}`, 'value']));
+    expect(() => TicketPatchSchema.parse({ TicketID: 1, Attributes: attrs })).not.toThrow();
+  });
+
+  it('rejects Attributes map with more than 50 keys (DoS PoC)', () => {
+    const attrs = Object.fromEntries(Array.from({ length: 51 }, (_, i) => [`Field${i}`, 'value']));
+    expect(() => TicketPatchSchema.parse({ TicketID: 1, Attributes: attrs })).toThrow();
+  });
+
+  it('rejects Attributes with a key longer than 100 characters', () => {
+    const attrs = { ['k'.repeat(101)]: 'value' };
+    expect(() => TicketPatchSchema.parse({ TicketID: 1, Attributes: attrs })).toThrow();
+  });
+
+  it('rejects Attributes with a value longer than 65535 characters', () => {
+    const attrs = { StatusID: 'x'.repeat(65536) };
+    expect(() => TicketPatchSchema.parse({ TicketID: 1, Attributes: attrs })).toThrow();
+  });
+
+  it('rejects a 500-key oversized map with long keys and values (original PoC)', () => {
+    const attrs = Object.fromEntries(
+      Array.from({ length: 500 }, (_, i) => [`FIELD_${String(i).padStart(4, '0')}`, 'x'.repeat(100)]),
+    );
+    expect(() => TicketPatchSchema.parse({ TicketID: 1, Attributes: attrs })).toThrow();
+  });
+});
+
+describe('Security: ISO 8601 date field validation', () => {
+  it('TicketSearchSchema accepts valid ISO date strings', () => {
+    expect(() =>
+      TicketSearchSchema.parse({ CreatedDateFrom: '2026-01-01', CreatedDateTo: '2026-12-31T23:59:59Z' }),
+    ).not.toThrow();
+  });
+
+  it('TicketSearchSchema rejects arbitrary strings as dates', () => {
+    expect(() => TicketSearchSchema.parse({ CreatedDateFrom: 'not-a-date' })).toThrow();
+  });
+
+  it('TicketSearchSchema rejects injection-style strings', () => {
+    expect(() => TicketSearchSchema.parse({ ModifiedDateFrom: "'; DROP TABLE tickets;--" })).toThrow();
+  });
+
+  it('TicketTaskCreateSchema accepts valid ISO date', () => {
+    expect(() =>
+      TicketTaskCreateSchema.parse({ TicketID: 1, Title: 'Task', StartDate: '2026-01-15', EndDate: '2026-02-01' }),
+    ).not.toThrow();
+  });
+
+  it('TicketTaskCreateSchema rejects invalid date strings', () => {
+    expect(() => TicketTaskCreateSchema.parse({ TicketID: 1, Title: 'Task', StartDate: 'tomorrow' })).toThrow();
+  });
+
+  it('ProjectIssueCreateSchema rejects invalid DueDate', () => {
+    expect(() => ProjectIssueCreateSchema.parse({ Title: 'Issue', DueDate: 'next week' })).toThrow();
+  });
+
+  it('ProjectRiskCreateSchema rejects invalid DueDate', () => {
+    expect(() => ProjectRiskCreateSchema.parse({ Title: 'Risk', DueDate: 'asap' })).toThrow();
+  });
+
+  it('TimeEntryQuerySchema accepts valid ISO dates', () => {
+    expect(() => TimeEntryQuerySchema.parse({ StartDate: '2026-01-01', EndDate: '2026-01-31' })).not.toThrow();
+  });
+
+  it('TimeEntryQuerySchema rejects non-ISO date strings', () => {
+    expect(() => TimeEntryQuerySchema.parse({ StartDate: 'January 1 2026', EndDate: '2026-01-31' })).toThrow();
   });
 });
