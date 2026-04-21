@@ -46,6 +46,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
+    "tablemark": "^4.1.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {

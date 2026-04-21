@@ -15,34 +15,56 @@ interface JsonRpcResponse {
   error?: { code: number; message: string; data?: unknown };
 }
 
+function encodeMcpMessage(message: JsonRpcRequest): string {
+  const body = JSON.stringify(message);
+  const length = Buffer.byteLength(body, 'utf8');
+  return `Content-Length: ${length}\r\n\r\n${body}`;
+}
+
 function writeRequest(child: ChildProcess, request: JsonRpcRequest): void {
-  child.stdin!.write(JSON.stringify(request) + '\n');
+  child.stdin!.write(encodeMcpMessage(request));
 }
 
 function waitForResponse(child: ChildProcess, id: number, timeoutMs = 8000): Promise<JsonRpcResponse> {
   return new Promise((resolve, reject) => {
-    let buffer = '';
+    let buffer = Buffer.alloc(0);
     const timer = setTimeout(() => reject(new Error(`Timed out waiting for response id=${id}`)), timeoutMs);
 
     function onData(chunk: Buffer) {
-      buffer += chunk.toString();
-      const lines = buffer.split('\n');
-      buffer = lines.pop() ?? '';
+      buffer = Buffer.concat([buffer, chunk]);
 
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed) continue;
+      while (true) {
+        const headerEnd = buffer.indexOf('\r\n\r\n');
+        if (headerEnd === -1) return;
+
+        const headerText = buffer.subarray(0, headerEnd).toString('utf8');
+        const contentLengthMatch = headerText.match(/Content-Length:\s*(\d+)/i);
+        if (!contentLengthMatch) {
+          // Invalid frame, consume header and continue
+          buffer = buffer.subarray(headerEnd + 4);
+          continue;
+        }
+
+        const contentLength = Number(contentLengthMatch[1]);
+        const totalFrameLength = headerEnd + 4 + contentLength;
+        if (buffer.length < totalFrameLength) return;
+
+        const bodyText = buffer.subarray(headerEnd + 4, totalFrameLength).toString('utf8');
+        buffer = buffer.subarray(totalFrameLength);
+
         let parsed: unknown;
         try {
-          parsed = JSON.parse(trimmed);
+          parsed = JSON.parse(bodyText);
         } catch {
           continue;
         }
+
         const response = parsed as JsonRpcResponse;
         if (response && response.id === id) {
           clearTimeout(timer);
           child.stdout!.off('data', onData);
           resolve(response);
+          return;
         }
       }
     }
