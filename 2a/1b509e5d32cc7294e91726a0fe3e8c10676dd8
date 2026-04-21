@@ -1,0 +1,31 @@
+test/integration/teamdynamix.tools.integration.test.ts
+  h_5cf1e2c1161853 108-134,136-145,147-168,276-312
+  c9791b4b12cbbbb7 135,146
+src/services/__tests__/teamdynamix.client.service.test.ts
+  h_5cf1e2c1161853 2,161-215
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "2a1b509e5d32cc7294e91726a0fe3e8c10676dd8",
+  "prompts": {
+    "c9791b4b12cbbbb7": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "d9136469-dcdd-405e-92c7-5d2cd38cd6f7",
+        "model": "copilot/gpt-4.1"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 2,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_5cf1e2c1161853": {
+      "author": "Daniel Sieradski"
+    }
+  }
+}
