@@ -136,7 +136,9 @@ describe('teamdynamix discovery tools', () => {
   });
 
   it('returns error when get_current_user fetch fails', async () => {
-    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Network failure'));
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response('fake.jwt.token', { status: 200, headers: { 'content-type': 'text/plain' } }))
+      .mockRejectedValueOnce(new Error('Network failure'));
 
     const result = (await callTool(server, 'teamdynamix_get_current_user', {
       response_format: 'json',
@@ -147,7 +149,9 @@ describe('teamdynamix discovery tools', () => {
   });
 
   it('returns error when list_applications fetch fails', async () => {
-    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Connection refused'));
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response('fake.jwt.token', { status: 200, headers: { 'content-type': 'text/plain' } }))
+      .mockRejectedValueOnce(new Error('Connection refused'));
 
     const result = (await callTool(server, 'teamdynamix_list_applications', {
       response_format: 'json',
@@ -157,7 +161,9 @@ describe('teamdynamix discovery tools', () => {
   });
 
   it('returns error when list_ticket_statuses fetch fails', async () => {
-    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Timeout'));
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response('fake.jwt.token', { status: 200, headers: { 'content-type': 'text/plain' } }))
+      .mockRejectedValueOnce(new Error('Timeout'));
 
     const result = (await callTool(server, 'teamdynamix_list_ticket_statuses', {
       app_id: 123,
@@ -275,7 +281,7 @@ describe('teamdynamix ticket tools', () => {
   });
 
   it('returns isError when get_ticket fetch fails', async () => {
-    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('API unavailable'));
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(mockAuth()).mockRejectedValueOnce(new Error('API unavailable'));
 
     const result = (await callTool(server, 'teamdynamix_get_ticket', {
       app_id: 123,
@@ -287,7 +293,7 @@ describe('teamdynamix ticket tools', () => {
   });
 
   it('returns isError when search_tickets fetch fails', async () => {
-    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('API unavailable'));
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(mockAuth()).mockRejectedValueOnce(new Error('API unavailable'));
 
     const result = (await callTool(server, 'teamdynamix_search_tickets', {
       app_id: 123,
@@ -299,7 +305,7 @@ describe('teamdynamix ticket tools', () => {
   });
 
   it('returns isError when update_ticket fetch fails', async () => {
-    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('API unavailable'));
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(mockAuth()).mockRejectedValueOnce(new Error('API unavailable'));
 
     const result = (await callTool(server, 'teamdynamix_update_ticket', {
       app_id: 123,

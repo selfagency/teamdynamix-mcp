@@ -130,25 +130,22 @@ describe('teamdynamix client service unconfigured error paths', () => {
   });
 
   it('aborts request after timeoutMs elapses', async () => {
-    vi.spyOn(globalThis, 'fetch').mockImplementation(async (_url, opts) => {
-      if (!opts?.signal) throw new Error('No signal provided to fetch');
-      return new Response('fake.jwt.token', { status: 200, headers: { 'content-type': 'text/plain' } });
-    });
-
-    // Intercept the second fetch (the API call) to simulate abort
     let callCount = 0;
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (_url, opts) => {
+      if (!opts?.signal) throw new Error('No signal provided to fetch');
+
       callCount += 1;
       if (callCount === 1) {
         return new Response('fake.jwt.token', { status: 200, headers: { 'content-type': 'text/plain' } });
       }
+
       // Simulate a request that honors the abort signal
       return new Promise<Response>((_resolve, reject) => {
-        if (opts?.signal?.aborted) {
+        if (opts.signal?.aborted) {
           reject(new DOMException('The operation was aborted', 'AbortError'));
           return;
         }
-        opts?.signal?.addEventListener('abort', () => {
+        opts.signal?.addEventListener('abort', () => {
           reject(new DOMException('The operation was aborted', 'AbortError'));
         });
         // Never resolve naturally to trigger abort
@@ -159,7 +156,7 @@ describe('teamdynamix client service unconfigured error paths', () => {
     await expect(client.listApplications()).rejects.toThrow('The operation was aborted');
   });
 
-  it('throws when requireAdmin is true but authMode is standard', async () => {
+  it('throws when assertAdminToolsEnabled is called with enableAdminTools: false', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response('fake.jwt.token', { status: 200, headers: { 'content-type': 'text/plain' } }),
     );
