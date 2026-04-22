@@ -25,24 +25,29 @@ function waitForResponse(child: ChildProcess, id: number, timeoutMs = 8000): Pro
     const timer = setTimeout(() => reject(new Error(`Timed out waiting for response id=${id}`)), timeoutMs);
 
     function onData(chunk: Buffer) {
-      buffer += chunk.toString();
+      buffer += chunk.toString('utf8');
+
       const lines = buffer.split('\n');
+      // Keep last (potentially incomplete) line in buffer
       buffer = lines.pop() ?? '';
 
       for (const line of lines) {
         const trimmed = line.trim();
         if (!trimmed) continue;
+
         let parsed: unknown;
         try {
           parsed = JSON.parse(trimmed);
         } catch {
           continue;
         }
+
         const response = parsed as JsonRpcResponse;
         if (response && response.id === id) {
           clearTimeout(timer);
           child.stdout!.off('data', onData);
           resolve(response);
+          return;
         }
       }
     }

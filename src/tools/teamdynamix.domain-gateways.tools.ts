@@ -27,6 +27,7 @@ import {
 } from '../schemas/teamdynamix/index.js';
 import { assertWriteToolsEnabled, createConfiguredTeamDynamixClient } from '../services/teamdynamix/client.service.js';
 import { redactTeamDynamixConfig } from '../services/teamdynamix/core.service.js';
+import { render } from '../services/teamdynamix/render.service.js';
 import type { ResponseFormat } from '../types.js';
 
 const teamdynamixDiscoveryActionSchema = z.enum([
@@ -121,12 +122,6 @@ const teamdynamixReferenceDataActionSchema = z.enum([
 ]);
 
 const gatewayPayloadSchema = z.record(z.string(), z.unknown()).default({});
-
-function render(data: unknown, responseFormat: ResponseFormat): string {
-  if (responseFormat === 'json') return JSON.stringify(data, null, 2);
-  if (typeof data === 'string') return data;
-  return JSON.stringify(data, null, 2);
-}
 
 function messageFromError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);

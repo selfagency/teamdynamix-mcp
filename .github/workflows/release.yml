@@ -13,58 +13,258 @@ on:
 permissions:
   contents: read
   actions: read
+  pull-requests: read
+  id-token: write
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-${{ github.event_name }}-${{ github.event.inputs.version || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  detect-tag:
-    name: Detect release tag and readiness
+  prepare-release:
+    name: Prepare release from main
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 90
     permissions:
       contents: write
       actions: read
+      pull-requests: read
 
     outputs:
-      release_tag: ${{ steps.tag.outputs.release_tag }}
-      ready: ${{ steps.tag.outputs.ready }}
+      release_tag: ${{ steps.version.outputs.release_tag }}
+      target_sha: ${{ steps.sha.outputs.target_sha }}
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Resolve release version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION_INPUT='${{ inputs.version }}'
+          if [[ ! "$VERSION_INPUT" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "Invalid version input: $VERSION_INPUT" >&2
+            exit 1
+          fi
+          echo "release_version=$VERSION_INPUT" >> "$GITHUB_OUTPUT"
+          echo "release_tag=v$VERSION_INPUT" >> "$GITHUB_OUTPUT"
+
+      - name: Sync with latest main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --tags
+          git checkout main
+          git reset --hard origin/main
+
+      - name: Ensure release tag does not already exist
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ steps.version.outputs.release_tag }}
+        run: |
+          set -euo pipefail
+          if git tag -l "$RELEASE_TAG" | grep -qx "$RELEASE_TAG"; then
+            echo "Local tag already exists: $RELEASE_TAG" >&2
+            exit 1
+          fi
+          if git ls-remote --tags origin "refs/tags/$RELEASE_TAG" | grep -q .; then
+            echo "Remote tag already exists: $RELEASE_TAG" >&2
+            exit 1
+          fi
+
+      - name: Build changelog
+        id: changelog_notes
+        uses: mikepenz/release-changelog-builder-action@v6
+        with:
+          toTag: ${{ steps.version.outputs.release_tag }}
+          failOnError: 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update package.json and CHANGELOG.md
+        id: metadata
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.release_version }}
+          RELEASE_TAG: ${{ steps.version.outputs.release_tag }}
+          PREVIOUS_TAG: ${{ steps.changelog_notes.outputs.fromTag }}
+          RELEASE_NOTES: ${{ steps.changelog_notes.outputs.changelog }}
+        with:
+          script: |
+            const fs = require('node:fs');
+            const path = require('node:path');
+
+            const root = process.cwd();
+            const pkgPath = path.join(root, 'package.json');
+            const changelogPath = path.join(root, 'CHANGELOG.md');
+
+            const version = process.env.RELEASE_VERSION;
+            const releaseTag = process.env.RELEASE_TAG;
+            const previousTag = process.env.PREVIOUS_TAG || '';
+            const releaseNotes = (process.env.RELEASE_NOTES || '').trim() || '- No notable changes.';
+
+            let changed = false;
+
+            const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+            if (pkg.version !== version) {
+              pkg.version = version;
+              fs.writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
+              changed = true;
+            }
+
+            let changelog = '# Change Log\n\n## [Unreleased]\n';
+            if (fs.existsSync(changelogPath)) {
+              changelog = fs.readFileSync(changelogPath, 'utf8');
+            }
+
+            const date = new Date().toISOString().slice(0, 10);
+            const heading = `## [${version}] - ${date}`;
+            const sourceLine = previousTag ? `\n\n_Source: changes from ${previousTag} to ${releaseTag}._` : '';
+            const section = `\n${heading}\n\n${releaseNotes}${sourceLine}\n`;
+
+            if (!changelog.includes(heading)) {
+              const marker = '## [Unreleased]';
+              const idx = changelog.indexOf(marker);
+              const updated =
+                idx >= 0
+                  ? `${changelog.slice(0, idx + marker.length)}\n${section}${changelog.slice(idx + marker.length)}`
+                  : `${changelog}\n${section}`;
+              fs.writeFileSync(changelogPath, updated);
+              changed = true;
+            }
+
+            core.setOutput('changed', changed ? 'true' : 'false');
+
+      - name: Configure git identity
+        if: steps.metadata.outputs.changed == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit release metadata
+        if: steps.metadata.outputs.changed == 'true'
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ steps.version.outputs.release_tag }}
+        run: |
+          set -euo pipefail
+          git add package.json CHANGELOG.md
+          git commit -m "chore(release): update version and changelog for $RELEASE_TAG"
+          git push origin main
+
+      - name: Capture target SHA
+        id: sha
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "target_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for CI on release commit
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        env:
+          TARGET_SHA: ${{ steps.sha.outputs.target_sha }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const targetSha = process.env.TARGET_SHA;
+            const workflowName = 'CI';
+            const deadline = Date.now() + 60 * 60 * 1000;
+            const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+            const workflowsResp = await github.rest.actions.listRepoWorkflows({ owner, repo, per_page: 100 });
+            const workflow = workflowsResp.data.workflows.find(item => item.name === workflowName);
+            if (!workflow) {
+              core.setFailed(`Required workflow '${workflowName}' not found.`);
+              return;
+            }
+
+            while (Date.now() < deadline) {
+              const runsResp = await github.rest.actions.listWorkflowRuns({
+                owner,
+                repo,
+                workflow_id: workflow.id,
+                branch: 'main',
+                head_sha: targetSha,
+                per_page: 10,
+              });
+
+              const run = runsResp.data.workflow_runs[0];
+
+              if (!run) {
+                core.info(`Waiting for ${workflowName} run to appear for ${targetSha}...`);
+                await sleep(15000);
+                continue;
+              }
+
+              if (run.status !== 'completed') {
+                core.info(`${workflowName} is ${run.status} for ${targetSha}...`);
+                await sleep(15000);
+                continue;
+              }
+
+              if (run.conclusion !== 'success') {
+                core.setFailed(`Release blocked: workflow '${workflowName}' concluded with '${run.conclusion}' on ${targetSha}.`);
+                return;
+              }
+
+              core.info(`${workflowName} passed on ${targetSha}.`);
+              return;
+            }
+
+            core.setFailed(`Timed out waiting for '${workflowName}' on ${targetSha}.`);
+
+      - name: Create annotated tag and push
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ steps.version.outputs.release_tag }}
+          TARGET_SHA: ${{ steps.sha.outputs.target_sha }}
+          RELEASE_NOTES: ${{ steps.changelog_notes.outputs.changelog }}
+          PREVIOUS_TAG: ${{ steps.changelog_notes.outputs.fromTag }}
+        run: |
+          set -euo pipefail
+          if [[ -n "$PREVIOUS_TAG" ]]; then
+            SOURCE_LINE="Source: changes from $PREVIOUS_TAG to $RELEASE_TAG."
+          else
+            SOURCE_LINE=""
+          fi
+          printf 'Release %s\n\n%s\n\n%s\n\nTarget commit: %s\n' "$RELEASE_TAG" "$RELEASE_NOTES" "$SOURCE_LINE" "$TARGET_SHA" > tag-message.txt
+          git tag -a "$RELEASE_TAG" "$TARGET_SHA" -F tag-message.txt
+          git push origin "refs/tags/$RELEASE_TAG"
+
+  verify-tag:
+    name: Verify release tag and readiness
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+
+    outputs:
+      release_tag: ${{ steps.verify.outputs.release_tag }}
+      ready: ${{ steps.verify.outputs.ready }}
 
     steps:
       - name: Resolve tag and verify CI readiness
-        id: tag
+        id: verify
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const owner = context.repo.owner;
             const repo = context.repo.repo;
-
-            let tagName;
-
-            if (context.eventName === 'workflow_dispatch') {
-              const versionInput = '${{ inputs.version }}'.trim();
-              if (!versionInput) {
-                core.setFailed('version input is required for workflow_dispatch.');
-                return;
-              }
-              tagName = versionInput.startsWith('v') ? versionInput : `v${versionInput}`;
-
-              const main = await github.rest.repos.getBranch({ owner, repo, branch: 'main' });
-              const mainSha = main.data.commit.sha;
-
-              core.info(`Creating tag ${tagName} at ${mainSha}...`);
-              await github.rest.git.createRef({
-                owner,
-                repo,
-                ref: `refs/tags/${tagName}`,
-                sha: mainSha,
-              });
-              core.info(`Tag ${tagName} created.`);
-            } else {
-              tagName = context.ref.replace('refs/tags/', '');
-            }
+            const tagName = context.ref.replace('refs/tags/', '');
 
             if (!tagName || !tagName.startsWith('v')) {
               core.info(`Ref '${context.ref}' is not a release tag; skipping.`);
@@ -73,65 +273,47 @@ jobs:
               return;
             }
 
-            const refData = await github.rest.git.getRef({
-              owner,
-              repo,
-              ref: `tags/${tagName}`,
-            });
-
+            const refData = await github.rest.git.getRef({ owner, repo, ref: `tags/${tagName}` });
             const refObj = refData.data.object;
             const taggedSha =
               refObj.type === 'tag'
                 ? (await github.rest.git.getTag({ owner, repo, tag_sha: refObj.sha })).data.object.sha
                 : refObj.sha;
+
             const main = await github.rest.repos.getBranch({ owner, repo, branch: 'main' });
             const mainSha = main.data.commit.sha;
 
             if (taggedSha !== mainSha) {
-              core.setFailed(
-                `Release blocked: tag ${tagName} points to ${taggedSha}, but latest main is ${mainSha}.`
-              );
+              core.setFailed(`Release blocked: tag ${tagName} points to ${taggedSha}, but latest main is ${mainSha}.`);
               return;
             }
 
-            const requiredWorkflows = ['CI'];
+            const workflowName = 'CI';
+            const workflowsResp = await github.rest.actions.listRepoWorkflows({ owner, repo, per_page: 100 });
+            const workflow = workflowsResp.data.workflows.find(item => item.name === workflowName);
+            if (!workflow) {
+              core.setFailed(`Release blocked: required workflow '${workflowName}' not found in repository.`);
+              return;
+            }
 
-            for (const workflowName of requiredWorkflows) {
-              const workflowsResp = await github.rest.actions.listRepoWorkflows({
-                owner,
-                repo,
-                per_page: 100,
-              });
+            const runsResp = await github.rest.actions.listWorkflowRuns({
+              owner,
+              repo,
+              workflow_id: workflow.id,
+              branch: 'main',
+              head_sha: mainSha,
+              status: 'completed',
+              per_page: 10,
+            });
 
-              const workflow = workflowsResp.data.workflows.find(w => w.name === workflowName);
-              if (!workflow) {
-                core.setFailed(`Release blocked: required workflow '${workflowName}' not found in repository.`);
-                return;
-              }
-
-              const runsResp = await github.rest.actions.listWorkflowRuns({
-                owner,
-                repo,
-                workflow_id: workflow.id,
-                branch: 'main',
-                head_sha: mainSha,
-                status: 'completed',
-                per_page: 10,
-              });
-
-              const run = runsResp.data.workflow_runs[0];
-              if (!run) {
-                core.setFailed(
-                  `Release blocked: required workflow '${workflowName}' has no completed run for ${mainSha}.`
-                );
-                return;
-              }
-              if (run.conclusion !== 'success') {
-                core.setFailed(
-                  `Release blocked: workflow '${workflowName}' concluded with '${run.conclusion}' on ${mainSha}.`
-                );
-                return;
-              }
+            const run = runsResp.data.workflow_runs[0];
+            if (!run) {
+              core.setFailed(`Release blocked: required workflow '${workflowName}' has no completed run for ${mainSha}.`);
+              return;
+            }
+            if (run.conclusion !== 'success') {
+              core.setFailed(`Release blocked: workflow '${workflowName}' concluded with '${run.conclusion}' on ${mainSha}.`);
+              return;
             }
 
             core.info(`Release tag detected: ${tagName} on latest main commit ${mainSha}; all checks passed.`);
@@ -139,65 +321,36 @@ jobs:
             core.setOutput('ready', 'true');
 
   release:
-    name: Build and Release
-    needs: detect-tag
-    if: needs.detect-tag.outputs.release_tag != '' && needs.detect-tag.outputs.ready == 'true'
+    name: Build and publish release
+    needs: verify-tag
+    if: github.event_name == 'push' && needs.verify-tag.outputs.release_tag != '' && needs.verify-tag.outputs.ready == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     permissions:
       contents: write
+      id-token: write
+      pull-requests: read
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
-          ref: ${{ needs.detect-tag.outputs.release_tag }}
+          ref: ${{ needs.verify-tag.outputs.release_tag }}
           fetch-depth: 0
 
-      - name: Generate release notes
+      - name: Build changelog
         id: changelog_notes
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        uses: mikepenz/release-changelog-builder-action@v6
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
-            const currentTag = '${{ needs.detect-tag.outputs.release_tag }}';
-
-            const tagsResp = await github.rest.repos.listTags({
-              owner,
-              repo,
-              per_page: 100,
-            });
-            const tags = tagsResp.data;
-
-            const index = tags.findIndex(tag => tag.name === currentTag);
-            const previousTag =
-              index >= 0
-                ? (tags.slice(index + 1).find(tag => tag.name.startsWith('v'))?.name ?? '')
-                : '';
-
-            const notesResponse = await github.rest.repos.generateReleaseNotes({
-              owner,
-              repo,
-              tag_name: currentTag,
-              ...(previousTag ? { previous_tag_name: previousTag } : {}),
-              target_commitish: 'main',
-            });
-
-            core.info(
-              previousTag
-                ? `Generated changelog notes from ${previousTag} to ${currentTag}.`
-                : `Generated changelog notes for ${currentTag} (no previous tag found).`
-            );
-
-            core.setOutput('previous_tag', previousTag);
-            core.setOutput('notes', notesResponse.data.body ?? '');
+          toTag: ${{ needs.verify-tag.outputs.release_tag }}
+          failOnError: 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Write release notes to file
         run: printf '%s' "$RELEASE_NOTES" > release-notes.md
         env:
-          RELEASE_NOTES: ${{ steps.changelog_notes.outputs.notes }}
+          RELEASE_NOTES: ${{ steps.changelog_notes.outputs.changelog }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
@@ -205,8 +358,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: "20"
-          cache: "pnpm"
+          node-version: '20'
+          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -214,16 +368,43 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Resolve npm dist-tag
+        id: npm_tag
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ needs.verify-tag.outputs.release_tag }}
+        run: |
+          set -euo pipefail
+          if [[ "$RELEASE_TAG" == *-* ]]; then
+            echo "dist_tag=next" >> "$GITHUB_OUTPUT"
+          else
+            echo "dist_tag=latest" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish package to npm
+        run: npm publish ./dist --access public --provenance --tag "${{ steps.npm_tag.outputs.dist_tag }}"
+
       - name: Pack npm tarball
         run: npm pack ./dist --pack-destination .
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
-          tag_name: ${{ needs.detect-tag.outputs.release_tag }}
+          tag_name: ${{ needs.verify-tag.outputs.release_tag }}
           body_path: release-notes.md
-          files: "*.tgz"
+          files: '*.tgz'
           draft: false
-          prerelease: ${{ contains(needs.detect-tag.outputs.release_tag, '-') }}
+          prerelease: ${{ contains(needs.verify-tag.outputs.release_tag, '-') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install mcp-publisher
+        run: |
+          set -euo pipefail
+          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+
+      - name: Login to MCP Registry with GitHub OIDC
+        run: ./mcp-publisher login github-oidc
+
+      - name: Publish to MCP Registry
+        run: ./mcp-publisher publish docs/public/server.json

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
+  "skills": [
+    {
+      "name": "teamdynamix",
+      "type": "skill-md",
+      "description": "Use this skill when the user needs TeamDynamix ITSM operations through MCP with safe ID-first workflows.",
+      "url": "/.well-known/agent-skills/teamdynamix/SKILL.md",
+      "digest": "sha256:20cd040f2a2079018db61021033b13979ebbafbd6a1eb646b0942dace58607c7"
+    }
+  ]
+}

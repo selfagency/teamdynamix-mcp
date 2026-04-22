@@ -4,19 +4,8 @@ import { TEAMDYNAMIX_TOOL_PREFIX } from '../constants.js';
 import { TeamDynamixAppIdSchema, TeamDynamixResponseFormatSchema } from '../schemas/teamdynamix/index.js';
 import { createConfiguredTeamDynamixClient } from '../services/teamdynamix/client.service.js';
 import { redactTeamDynamixConfig } from '../services/teamdynamix/core.service.js';
+import { render } from '../services/teamdynamix/render.service.js';
 import type { ResponseFormat } from '../types.js';
-
-function render(data: unknown, responseFormat: ResponseFormat): string {
-  if (responseFormat === 'json') {
-    return JSON.stringify(data, null, 2);
-  }
-
-  if (typeof data === 'string') {
-    return data;
-  }
-
-  return JSON.stringify(data, null, 2);
-}
 
 function messageFromError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);

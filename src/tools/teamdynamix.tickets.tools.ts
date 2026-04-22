@@ -11,15 +11,8 @@ import {
   TicketSearchSchema,
 } from '../schemas/teamdynamix/index.js';
 import { assertWriteToolsEnabled, createConfiguredTeamDynamixClient } from '../services/teamdynamix/client.service.js';
+import { render } from '../services/teamdynamix/render.service.js';
 import type { ResponseFormat } from '../types.js';
-
-function render(data: unknown, responseFormat: ResponseFormat): string {
-  if (responseFormat === 'json') {
-    return JSON.stringify(data, null, 2);
-  }
-  if (typeof data === 'string') return data;
-  return JSON.stringify(data, null, 2);
-}
 
 function messageFromError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -45,9 +38,10 @@ export function registerTeamDynamixTicketTools(server: McpServer): void {
       try {
         const client = createConfiguredTeamDynamixClient();
         const types = await client.listTicketTypes(app_id);
+        const payload = { appId: app_id, types };
         return {
-          content: [{ type: 'text', text: render(types, response_format) }],
-          structuredContent: { appId: app_id, types },
+          content: [{ type: 'text', text: render(payload, response_format) }],
+          structuredContent: payload,
         };
       } catch (error) {
         return { content: [{ type: 'text', text: `Error: ${messageFromError(error)}` }], isError: true };
