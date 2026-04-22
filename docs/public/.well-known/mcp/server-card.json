@@ -1,0 +1,18 @@
+{
+  "serverInfo": {
+    "name": "io.github.selfagency/teamdynamix-mcp",
+    "version": "0.1.1"
+  },
+  "transports": [
+    {
+      "type": "stdio",
+      "package": "@selfagency/teamdynamix-mcp",
+      "registry": "npm"
+    }
+  ],
+  "capabilities": {
+    "tools": true,
+    "resources": true,
+    "prompts": true
+  }
+}

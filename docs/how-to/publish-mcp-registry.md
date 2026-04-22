@@ -127,20 +127,29 @@ If GitHub Actions workflow `.github/workflows/release.yml` fails:
 1. Check workflow logs for specific error
 2. Confirm OIDC permissions are present (`id-token: write`, `contents: read`)
 3. Verify domain ownership is configured for `self.agency`
-4. Confirm `docs/public/server.json` is committed to the branch/tag being published
-5. Re-run workflow after fixing issue
+4. If the failure was in the manual dispatch path, confirm the workflow could update `package.json` and `CHANGELOG.md` on `main`
+5. Confirm the release tag points at the latest `main` commit after CI passes
+6. Confirm `docs/public/server.json` is committed to the branch/tag being published
+7. Re-run workflow after fixing issue
 
 ## Automation notes
 
 - **Automated trigger**: The workflow runs automatically on git tags matching `v*` (e.g., `v0.2.0`)
-- **Manual trigger**: Use GitHub Actions UI to run `Release` workflow with version input
-- **Publish order**: The `release.yml` workflow publishes release artifacts and MCP Registry metadata in one flow
+- **Manual trigger**: Use GitHub Actions UI to run `Release` with a version input; it updates `package.json` and `CHANGELOG.md`, pushes `main`, waits for CI, and creates the annotated release tag
+- **Tag trigger**: The pushed release tag starts the publish phase automatically
+- **Publish order**: The tag-triggered phase publishes the npm package first, then publishes MCP Registry metadata from `docs/public/server.json`
 
 ## Required secrets
 
 For GitHub Actions CI/CD with OIDC:
 
-**No secrets required**. The workflow uses OpenID Connect (OIDC) authentication, which automatically generates short-lived tokens based on GitHub Actions identity and domain verification at `self.agency`.
+**No npm token is required**. The workflow publishes to npm using **npm trusted publishing** with GitHub Actions OIDC, and publishes to MCP Registry using OIDC at `self.agency`.
+
+Workflow requirements:
+
+- `id-token: write` permission must be present on the release job
+- the npm package must have a trusted publisher configured for this repository/workflow
+- no `NPM_TOKEN` secret is required for the GitHub Actions release flow
 
 For manual publishing:
 
@@ -148,9 +157,10 @@ For manual publishing:
 
 ## OIDC Authentication
 
-This repository uses OpenID Connect (OIDC) for MCP Registry authentication:
+This repository uses OpenID Connect (OIDC) in two places during automated release:
 
-- **Automated (CI/CD)**: GitHub Actions `release.yml` workflow authenticates automatically using OIDC without secrets
+- **npm publish**: GitHub Actions `release.yml` uses npm trusted publishing via OIDC without `NPM_TOKEN`
+- **MCP Registry publish**: GitHub Actions `release.yml` authenticates automatically using OIDC without secrets
 - **Manual (local)**: Requires domain credentials or dashboard access
 - **Security**: OIDC provides short-lived tokens, reducing credential exposure risk
 - **Domain verification**: Your domain (`self.agency`) must be verified with the MCP Registry

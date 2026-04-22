@@ -1,0 +1,25 @@
+{
+  "linkset": [
+    {
+      "anchor": "https://github.com/selfagency/teamdynamix-mcp",
+      "service-desc": [
+        {
+          "href": "https://raw.githubusercontent.com/selfagency/teamdynamix-mcp/main/docs/public/server.json",
+          "type": "application/json"
+        }
+      ],
+      "service-doc": [
+        {
+          "href": "https://github.com/selfagency/teamdynamix-mcp#readme",
+          "type": "text/html"
+        }
+      ],
+      "status": [
+        {
+          "href": "https://github.com/selfagency/teamdynamix-mcp/actions",
+          "type": "text/html"
+        }
+      ]
+    }
+  ]
+}
