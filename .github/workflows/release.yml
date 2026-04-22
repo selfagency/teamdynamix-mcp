@@ -105,6 +105,8 @@ jobs:
           fi
 
       - name: Publish package to npm (OIDC)
+        env:
+          NODE_AUTH_TOKEN: ""
         run: npm publish ./dist --access public --provenance --tag "${{ steps.npm_tag.outputs.dist_tag }}"
 
       - name: Pack npm tarball
