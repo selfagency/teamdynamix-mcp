@@ -16,16 +16,16 @@ npm install -g @modelcontextprotocol/publisher@latest
 
 ## Step 2: Verify server.json
 
-Confirm `server.json` exists at repository root and has correct values:
+Confirm `docs/public/server.json` exists and has correct values:
 
 ```bash
 # Verify mcpName matches package.json
-jq '.name' server.json # Should be: agency.self/teamdynamix-mcp
-jq '.packages[0].identifier' server.json # Should be: @selfagency/teamdynamix-mcp
+jq '.name' docs/public/server.json # Should be: agency.self/teamdynamix-mcp
+jq '.packages[0].identifier' docs/public/server.json # Should be: @selfagency/teamdynamix-mcp
 
 # Verify version alignment
-jq '.version' server.json # Should match package.json version
-jq '.packages[0].version' server.json # Should match package.json version
+jq '.version' docs/public/server.json # Should match package.json version
+jq '.packages[0].version' docs/public/server.json # Should match package.json version
 ```
 
 Expected structure:
@@ -43,7 +43,7 @@ From the repository root:
 
 ```bash
 # Publish to MCP Registry
-mcp-publisher publish server.json --domain self.agency
+mcp-publisher publish docs/public/server.json --domain self.agency
 ```
 
 Expected output:
@@ -54,7 +54,7 @@ Expected output:
 ✓ Published agency.self/teamdynamix-mcp v0.2.0
 ```
 
-## Step 5: Verify publication
+## Step 4: Verify publication
 
 Confirm:
 
@@ -105,7 +105,7 @@ Confirm:
 
 ### Auth token invalid
 
-**Error**: `Authentication failed: Invalid MCP_PUBLISHER_TOKEN`
+**Error**: `Authentication failed: Invalid MCP_PUBLISHER_TOKEN` (manual/local token flow)
 
 **Fix**:
 
@@ -121,22 +121,22 @@ Confirm:
 
 1. Run `npm publish` to push npm package first
 2. Wait for npm registry propagation (usually < 1 minute)
-3. Retry `mcp-publisher publish server.json`
+3. Retry `mcp-publisher publish docs/public/server.json`
 
 ### CI workflow failure
 
 If GitHub Actions workflow `.github/workflows/publish-mcp-registry.yml` fails:
 
 1. Check workflow logs for specific error
-2. Verify `MCP_PUBLISHER_TOKEN` secret is set in repo settings
-3. Ensure token has `publish` scope for your domain
-4. Confirm `server.json` committed to main branch
+2. Confirm OIDC permissions are present (`id-token: write`, `contents: read`)
+3. Verify domain ownership is configured for `self.agency`
+4. Confirm `docs/public/server.json` is committed to the branch/tag being published
 5. Re-run workflow after fixing issue
 
 ## Automation notes
 
 - **Automated trigger**: The workflow runs automatically on git tags matching `v*` (e.g., `v0.2.0`)
-- **Manual trigger**: Use GitHub Actions UI to run `Publish to MCP Registry` workflow with version input
+- **Manual trigger**: Use GitHub Actions UI to run `Publish to MCP Registry` workflow
 - **Publish order**: The existing release.yml workflow publishes npm first; then MCP registry workflow publishes server.json
 
 ## Required secrets
@@ -156,8 +156,6 @@ This repository uses OpenID Connect (OIDC) for MCP Registry authentication:
 - **Manual (local)**: Requires domain credentials or dashboard access
 - **Security**: OIDC provides short-lived tokens, reducing credential exposure risk
 - **Domain verification**: Your domain (`self.agency`) must be verified with the MCP Registry
-
-## Related guides
 
 ## Related guides
 

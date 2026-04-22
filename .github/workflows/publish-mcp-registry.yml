@@ -4,11 +4,6 @@ on:
   push:
     tags: [ "v*" ]
   workflow_dispatch:
-    inputs:
-      version:
-        description: "Version to publish (e.g. 1.2.3)"
-        required: true
-        type: string
 
 permissions:
   contents: read
@@ -45,6 +40,6 @@ jobs:
         run: ./mcp-publisher login github-oidc
 
       - name: Publish to MCP Registry
-        run: mcp-publisher publish --domain self.agency
+        run: ./mcp-publisher publish --domain self.agency
         env:
           MCP_PUBLISHER_SERVER_JSON_PATH: docs/public/server.json
