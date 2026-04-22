@@ -1,0 +1,16 @@
+src/services/teamdynamix/render.service.ts
+  h_5cf1e2c1161853 140,142,149,159
+test/e2e/mcp.e2e.test.ts
+  h_5cf1e2c1161853 19,24,28,30-32,34-36,40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "169eaa7beb0464861f84a57093356b950c56c264",
+  "prompts": {},
+  "humans": {
+    "h_5cf1e2c1161853": {
+      "author": "Daniel Sieradski"
+    }
+  }
+}
