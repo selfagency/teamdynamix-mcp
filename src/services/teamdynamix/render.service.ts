@@ -1,7 +1,6 @@
 import { tablemark } from 'tablemark';
 import { CHARACTER_LIMIT } from '../../constants.js';
-
-export type ResponseFormat = 'markdown' | 'json';
+import type { ResponseFormat } from '../../types.js';
 
 /**
  * Render payload to a string based on the requested format.
@@ -27,8 +26,8 @@ export function render(
 function renderMarkdown(payload: unknown): string {
   if (payload == null) return '';
   if (typeof payload !== 'object') {
-    // For markdown, empty string for undefined/null, else string value
-    return payload === undefined ? '' : String(payload);
+    // payload == null is already handled above; all remaining non-objects stringify directly
+    return String(payload);
   }
 
   if (Array.isArray(payload)) {
@@ -65,10 +64,26 @@ function isArrayOfPlainObjects(value: unknown): value is readonly Record<string,
   return Array.isArray(value) && value.length > 0 && value.every(isPlainObject);
 }
 
+/**
+ * Serialize any value to a compact, human-readable string.
+ * Avoids '[object Object]' for nested structures.
+ */
+function serializeValue(value: unknown): string {
+  if (typeof value !== 'object' || value === null) return String(value);
+  if (Array.isArray(value)) return value.map(serializeValue).join(', ');
+  return (
+    '{ ' +
+    Object.entries(value)
+      .map(([k, v]) => `${k}: ${typeof v === 'object' && v !== null ? '[Object]' : String(v)}`)
+      .join(', ') +
+    ' }'
+  );
+}
+
 function renderObjectAsMarkdownList(obj: Record<string, unknown>): string {
   const lines: string[] = [];
   for (const [key, val] of Object.entries(obj)) {
-    lines.push(`- **${key}**: ${truncateCell(String(val))}`);
+    lines.push(`- **${key}**: ${truncateCell(serializeValue(val))}`);
   }
   return lines.join('\n');
 }
@@ -90,7 +105,7 @@ function renderObjectWithTables(obj: Record<string, unknown>): string {
   if (scalarEntries.length > 0) {
     lines.push('**Metadata:**');
     for (const [key, val] of scalarEntries) {
-      lines.push(`- **${key}**: ${truncateCell(String(val))}`);
+      lines.push(`- **${key}**: ${truncateCell(serializeValue(val))}`);
     }
     lines.push('');
   }
@@ -108,23 +123,7 @@ function renderObjectWithTables(obj: Record<string, unknown>): string {
 
 function renderArrayAsMarkdownTable(arr: readonly Record<string, unknown>[]): string {
   // tablemark expects iterable of objects; we'll provide a toCellText to handle nested values safely
-  const toCellText = ({ value }: { key: string; value: unknown }): string => {
-    if (typeof value === 'object' && value !== null) {
-      if (Array.isArray(value)) {
-        // Render array as comma-separated string
-        return value.map(String).join(',');
-      }
-      // Render object as { a: 1, b: 2 }
-      return (
-        '{ ' +
-        Object.entries(value)
-          .map(([k, v]) => `${k}: ${typeof v === 'object' && v !== null ? '[Object]' : String(v)}`)
-          .join(', ') +
-        ' }'
-      );
-    }
-    return String(value);
-  };
+  const toCellText = ({ value }: { key: string; value: unknown }): string => serializeValue(value);
 
   // Use headerFormatter to preserve original key casing
   // Generate table, then collapse multiple spaces between pipes to a single space
@@ -169,14 +168,10 @@ function truncateCell(str: string): string {
 
 function truncateMarkdown(markdown: string, limit: number): string {
   if (markdown.length <= limit) return markdown;
-  // Truncate and append '...' (three dots) at the end, ensuring it is present and within limit.
   const ellipsis = '...';
-  let truncated = markdown.slice(0, limit - ellipsis.length);
-  // Only trim trailing newlines, not all whitespace
-  truncated = truncated.replace(/[\n]+$/, '');
-  // Ensure the final output is within the limit
-  while ((truncated + ellipsis).length > limit) {
-    truncated = truncated.slice(0, -1);
-  }
+  // If limit is too small to fit even the ellipsis, return a clamped slice.
+  if (limit <= ellipsis.length) return markdown.slice(0, limit);
+  // Slice to fit, then strip trailing newlines before appending ellipsis.
+  const truncated = markdown.slice(0, limit - ellipsis.length).replace(/\n+$/, '');
   return truncated + ellipsis;
 }

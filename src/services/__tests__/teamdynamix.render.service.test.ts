@@ -86,7 +86,7 @@ describe('teamdynamix.render.service', () => {
         };
         const md = render(data, 'markdown');
         expect(md).toContain('| id | meta | tags |');
-        expect(md).toMatch(/\| 1 \| \{ a: 1, b: 2 \} \| x,y \|/);
+        expect(md).toMatch(/\| 1 \| \{ a: 1, b: 2 \} \| x, y \|/);
       });
 
       it('applies CHARACTER_LIMIT truncation with notice', () => {
