@@ -15,46 +15,29 @@ interface JsonRpcResponse {
   error?: { code: number; message: string; data?: unknown };
 }
 
-function encodeMcpMessage(message: JsonRpcRequest): string {
-  const body = JSON.stringify(message);
-  const length = Buffer.byteLength(body, 'utf8');
-  return `Content-Length: ${length}\r\n\r\n${body}`;
-}
-
 function writeRequest(child: ChildProcess, request: JsonRpcRequest): void {
-  child.stdin!.write(encodeMcpMessage(request));
+  child.stdin!.write(JSON.stringify(request) + '\n');
 }
 
 function waitForResponse(child: ChildProcess, id: number, timeoutMs = 8000): Promise<JsonRpcResponse> {
   return new Promise((resolve, reject) => {
-    let buffer = Buffer.alloc(0);
+    let buffer = '';
     const timer = setTimeout(() => reject(new Error(`Timed out waiting for response id=${id}`)), timeoutMs);
 
     function onData(chunk: Buffer) {
-      buffer = Buffer.concat([buffer, chunk]);
+      buffer += chunk.toString('utf8');
 
-      while (true) {
-        const headerEnd = buffer.indexOf('\r\n\r\n');
-        if (headerEnd === -1) return;
+      const lines = buffer.split('\n');
+      // Keep last (potentially incomplete) line in buffer
+      buffer = lines.pop() ?? '';
 
-        const headerText = buffer.subarray(0, headerEnd).toString('utf8');
-        const contentLengthMatch = headerText.match(/Content-Length:\s*(\d+)/i);
-        if (!contentLengthMatch) {
-          // Invalid frame, consume header and continue
-          buffer = buffer.subarray(headerEnd + 4);
-          continue;
-        }
-
-        const contentLength = Number(contentLengthMatch[1]);
-        const totalFrameLength = headerEnd + 4 + contentLength;
-        if (buffer.length < totalFrameLength) return;
-
-        const bodyText = buffer.subarray(headerEnd + 4, totalFrameLength).toString('utf8');
-        buffer = buffer.subarray(totalFrameLength);
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
 
         let parsed: unknown;
         try {
-          parsed = JSON.parse(bodyText);
+          parsed = JSON.parse(trimmed);
         } catch {
           continue;
         }

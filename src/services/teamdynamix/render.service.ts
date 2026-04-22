@@ -135,26 +135,29 @@ function renderArrayAsMarkdownTable(arr: readonly Record<string, unknown>[]): st
   // Replace multiple spaces between pipes with a single space (for all header/row lines)
   table = table.replace(/\| +/g, '| ').replace(/ +\|/g, ' |');
   // Fix header separator row: force dashes to exactly 3, 4, 5, ... for columns 1, 2, 3, ...
-  table = table.replace(/^(\| +:)(-+)( +\|)/gm, (match, pre, dashes, post, offset, str) => {
-    // Only process the first header separator row
-    if (str.slice(0, offset).includes(':---')) return match;
-    // Count columns by splitting the header row above
-    const headerLine = str
-      .slice(0, offset)
-      .split('\n')
-      .reverse()
-      .find((l: string) => l.startsWith('|'));
-    if (!headerLine) return match;
-    const colCount = headerLine.split('|').length - 2;
-    // Build the expected dash counts: 3, 4, 5, ...
-    const dashCounts = Array.from({ length: colCount }, (_, i) => 3 + i);
-    // Build the new separator row
-    const newRow = ['']
-      .concat(dashCounts.map(n => ` :${'-'.repeat(n)} `))
-      .concat([''])
-      .join('|');
-    return newRow;
-  });
+  table = table.replace(
+    /^(\| +:)(-+)( +\|)/gm,
+    (_match: string, _pre: string, _dashes: string, _post: string, offset: number, str: string) => {
+      // Only process the first header separator row
+      if (str.slice(0, offset).includes(':---')) return _match;
+      // Count columns by splitting the header row above
+      const headerLine = str
+        .slice(0, offset)
+        .split('\n')
+        .reverse()
+        .find((l: string) => l.startsWith('|'));
+      if (!headerLine) return _match;
+      const colCount = headerLine.split('|').length - 2;
+      // Build the expected dash counts: 3, 4, 5, ...
+      const dashCounts = Array.from({ length: colCount }, (_, i) => 3 + i);
+      // Build the new separator row
+      const newRow = ['']
+        .concat(dashCounts.map(n => ` :${'-'.repeat(n)} `))
+        .concat([''])
+        .join('|');
+      return newRow;
+    },
+  );
   return table;
 }
 
