@@ -1,0 +1,25 @@
+{
+  "issuer": "https://auth.self.agency",
+  "authorization_endpoint": "https://auth.self.agency/oauth2/authorize",
+  "token_endpoint": "https://auth.self.agency/oauth2/token",
+  "jwks_uri": "https://auth.self.agency/.well-known/jwks.json",
+  "grant_types_supported": [
+    "authorization_code",
+    "client_credentials"
+  ],
+  "response_types_supported": [
+    "code"
+  ],
+  "scopes_supported": [
+    "openid",
+    "profile",
+    "mcp.read",
+    "mcp.write"
+  ],
+  "subject_types_supported": [
+    "public"
+  ],
+  "id_token_signing_alg_values_supported": [
+    "RS256"
+  ]
+}

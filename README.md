@@ -17,6 +17,14 @@ A TypeScript [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) se
 - **Agent skill and prompt included**: ready-to-use skill definition for
   GitHub Copilot and compatible agents
 
+## MCP Registry
+
+This server is published to the [MCP Registry](https://modelcontextprotocol.io/) as `io.github.selfagency/teamdynamix-mcp`.
+
+- **Registry name**: `io.github.selfagency/teamdynamix-mcp`
+- **Install via registry**: `mcp-install io.github.selfagency/teamdynamix-mcp` (when available)
+- **Manual install**: Use npm package `@selfagency/teamdynamix-mcp` as shown below
+
 ## Quick start (developer setup)
 
 This quick start is for contributors running the server from source in this

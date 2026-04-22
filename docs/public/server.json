@@ -1,0 +1,97 @@
+{
+  "$schema": "https://modelcontextprotocol.io/schemas/server.json",
+  "name": "io.github.selfagency/teamdynamix-mcp",
+  "description": "A production-ready TypeScript MCP server for TeamDynamix ITSM, providing tools for tickets, knowledge base, assets, configuration items, services, projects, people, and more.",
+  "repository": "https://github.com/selfagency/teamdynamix-mcp",
+  "version": "0.1.1",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@selfagency/teamdynamix-mcp",
+      "version": "0.1.1",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ],
+  "environmentVariables": [
+    {
+      "name": "TEAMDYNAMIX_BASE_URL",
+      "isRequired": true,
+      "isSecret": false,
+      "description": "The base URL of your TeamDynamix instance (e.g., https://your-tenant.teamdynamix.com/TDWebApi). Must use HTTPS."
+    },
+    {
+      "name": "TEAMDYNAMIX_AUTH_MODE",
+      "isRequired": true,
+      "isSecret": false,
+      "description": "Authentication mode: 'standard' for username/password, or 'admin' for BEID/web services key."
+    },
+    {
+      "name": "TEAMDYNAMIX_USERNAME",
+      "isRequired": false,
+      "isSecret": true,
+      "description": "Username for standard authentication mode. Required when TEAMDYNAMIX_AUTH_MODE is 'standard'."
+    },
+    {
+      "name": "TEAMDYNAMIX_PASSWORD",
+      "isRequired": false,
+      "isSecret": true,
+      "description": "Password for standard authentication mode. Required when TEAMDYNAMIX_AUTH_MODE is 'standard'."
+    },
+    {
+      "name": "TEAMDYNAMIX_BEID",
+      "isRequired": false,
+      "isSecret": true,
+      "description": "BEID for admin authentication mode. Required when TEAMDYNAMIX_AUTH_MODE is 'admin'."
+    },
+    {
+      "name": "TEAMDYNAMIX_WEB_SERVICES_KEY",
+      "isRequired": false,
+      "isSecret": true,
+      "description": "Web services key for admin authentication mode. Required when TEAMDYNAMIX_AUTH_MODE is 'admin'."
+    },
+    {
+      "name": "TEAMDYNAMIX_DEFAULT_TICKET_APP_ID",
+      "isRequired": false,
+      "isSecret": false,
+      "description": "Default application ID for ticket operations. Used when app_id parameter is omitted."
+    },
+    {
+      "name": "TEAMDYNAMIX_DEFAULT_ASSET_APP_ID",
+      "isRequired": false,
+      "isSecret": false,
+      "description": "Default application ID for asset operations. Used when app_id parameter is omitted."
+    },
+    {
+      "name": "TEAMDYNAMIX_DEFAULT_KB_APP_ID",
+      "isRequired": false,
+      "isSecret": false,
+      "description": "Default application ID for knowledge base operations. Used when app_id parameter is omitted."
+    },
+    {
+      "name": "TEAMDYNAMIX_TIMEOUT_MS",
+      "isRequired": false,
+      "isSecret": false,
+      "description": "HTTP timeout in milliseconds. Default: 30000 (30 seconds)."
+    },
+    {
+      "name": "TEAMDYNAMIX_MAX_RETRIES",
+      "isRequired": false,
+      "isSecret": false,
+      "description": "Maximum retry attempts for transient failures. Default: 2."
+    },
+    {
+      "name": "TEAMDYNAMIX_ENABLE_WRITE_TOOLS",
+      "isRequired": false,
+      "isSecret": false,
+      "description": "Enables write/mutation tools (create, update, comment). Default: false. Set to 'true' to enable."
+    },
+    {
+      "name": "TEAMDYNAMIX_ENABLE_ADMIN_TOOLS",
+      "isRequired": false,
+      "isSecret": false,
+      "description": "Enables administrative operations. Default: false. Set to 'true' to enable."
+    }
+  ]
+}

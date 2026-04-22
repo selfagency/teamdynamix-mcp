@@ -1,0 +1,27 @@
+/
+  Link: </.well-known/api-catalog>; rel="api-catalog"
+  Link: </reference/>; rel="service-doc"
+  Link: </server.json>; rel="service-desc"; type="application/json"
+  Link: </.well-known/mcp/server-card.json>; rel="describedby"; type="application/json"
+  Vary: Accept
+
+/.well-known/api-catalog
+  Content-Type: application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727"
+
+/.well-known/openid-configuration
+  Content-Type: application/json
+
+/.well-known/oauth-authorization-server
+  Content-Type: application/json
+
+/.well-known/oauth-protected-resource
+  Content-Type: application/json
+
+/.well-known/mcp/server-card.json
+  Content-Type: application/json
+
+/.well-known/agent-skills/index.json
+  Content-Type: application/json
+
+/.well-known/agent-skills/*/SKILL.md
+  Content-Type: text/markdown; charset=utf-8

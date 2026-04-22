@@ -45,9 +45,7 @@ function renderMarkdown(payload: unknown): string {
 
   // Single object: render as a compact key/value list unless it contains a table-eligible array
   if (isPlainObject(payload)) {
-    const hasArrayOfObjects = Object.values(payload).some(
-      v => Array.isArray(v) && v.length > 0 && v.every(isPlainObject),
-    );
+    const hasArrayOfObjects = Object.values(payload).some(isArrayOfPlainObjects);
     if (hasArrayOfObjects) {
       // Render the array(s) as tables and the rest as context
       return renderObjectWithTables(payload);
@@ -63,6 +61,10 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+function isArrayOfPlainObjects(value: unknown): value is readonly Record<string, unknown>[] {
+  return Array.isArray(value) && value.length > 0 && value.every(isPlainObject);
+}
+
 function renderObjectAsMarkdownList(obj: Record<string, unknown>): string {
   const lines: string[] = [];
   for (const [key, val] of Object.entries(obj)) {
@@ -75,10 +77,10 @@ function renderObjectWithTables(obj: Record<string, unknown>): string {
   const lines: string[] = [];
   // First, emit scalar metadata as a bullet list
   const scalarEntries: [string, unknown][] = [];
-  const arrayEntries: [string, unknown][] = [];
+  const arrayEntries: [string, readonly Record<string, unknown>[]][] = [];
 
   for (const [key, val] of Object.entries(obj)) {
-    if (Array.isArray(val) && val.length > 0 && val.every(isPlainObject)) {
+    if (isArrayOfPlainObjects(val)) {
       arrayEntries.push([key, val]);
     } else {
       scalarEntries.push([key, val]);
@@ -162,7 +164,7 @@ function truncateCell(str: string): string {
   return str.slice(0, MAX) + '…';
 }
 
-function truncateMarkdown(markdown: string, limit: string): string {
+function truncateMarkdown(markdown: string, limit: number): string {
   if (markdown.length <= limit) return markdown;
   // Truncate and append '...' (three dots) at the end, ensuring it is present and within limit.
   const ellipsis = '...';

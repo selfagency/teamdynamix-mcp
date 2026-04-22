@@ -1,0 +1,13 @@
+{
+  "resource": "https://github.com/selfagency/teamdynamix-mcp",
+  "authorization_servers": [
+    "https://auth.self.agency"
+  ],
+  "scopes_supported": [
+    "mcp.read",
+    "mcp.write"
+  ],
+  "bearer_methods_supported": [
+    "header"
+  ]
+}
