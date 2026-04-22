@@ -20,7 +20,7 @@ Confirm `docs/public/server.json` exists and has correct values:
 
 ```bash
 # Verify mcpName matches package.json
-jq '.name' docs/public/server.json # Should be: agency.self/teamdynamix-mcp
+jq '.name' docs/public/server.json # Should be: io.github.selfagency/teamdynamix-mcp
 jq '.packages[0].identifier' docs/public/server.json # Should be: @selfagency/teamdynamix-mcp
 
 # Verify version alignment
@@ -37,8 +37,6 @@ Expected structure:
 
 ## Step 3: Publish server.json
 
-
-
 From the repository root:
 
 ```bash
@@ -51,31 +49,30 @@ Expected output:
 ```text
 ✓ Validated server.json
 ✓ Domain ownership verified: self.agency
-✓ Published agency.self/teamdynamix-mcp v0.2.0
+✓ Published io.github.selfagency/teamdynamix-mcp v0.2.0
 ```
 
 ## Step 4: Verify publication
 
 Confirm:
 
-- Server name: `agency.self/teamdynamix-mcp`
+- Server name: `io.github.selfagency/teamdynamix-mcp`
 - Version: Matches your published version
 - Environment variables documented correctly
 - Package listing shows npm transport
-
-
 
 Check that your server appears in the MCP Registry:
 
 ```bash
 # Search for your server (when CLI search is available)
-mcp-publisher search agency.self/teamdynamix-mcp
+mcp-publisher search io.github.selfagency/teamdynamix-mcp
 
 # Or verify via web UI at modelcontextprotocol.io
 ```
 
 Confirm:
-- Server name: `agency.self/teamdynamix-mcp`
+
+- Server name: `io.github.selfagency/teamdynamix-mcp`
 - Version: Matches your published version
 - Environment variables documented correctly
 - Package listing shows npm transport
@@ -125,7 +122,7 @@ Confirm:
 
 ### CI workflow failure
 
-If GitHub Actions workflow `.github/workflows/publish-mcp-registry.yml` fails:
+If GitHub Actions workflow `.github/workflows/release.yml` fails:
 
 1. Check workflow logs for specific error
 2. Confirm OIDC permissions are present (`id-token: write`, `contents: read`)
@@ -136,8 +133,8 @@ If GitHub Actions workflow `.github/workflows/publish-mcp-registry.yml` fails:
 ## Automation notes
 
 - **Automated trigger**: The workflow runs automatically on git tags matching `v*` (e.g., `v0.2.0`)
-- **Manual trigger**: Use GitHub Actions UI to run `Publish to MCP Registry` workflow
-- **Publish order**: The existing release.yml workflow publishes npm first; then MCP registry workflow publishes server.json
+- **Manual trigger**: Use GitHub Actions UI to run `Release` workflow with version input
+- **Publish order**: The `release.yml` workflow publishes release artifacts and MCP Registry metadata in one flow
 
 ## Required secrets
 
@@ -146,13 +143,14 @@ For GitHub Actions CI/CD with OIDC:
 **No secrets required**. The workflow uses OpenID Connect (OIDC) authentication, which automatically generates short-lived tokens based on GitHub Actions identity and domain verification at `self.agency`.
 
 For manual publishing:
+
 - You must manually authenticate with your domain credentials or use the MCP Registry dashboard to publish server.json directly
 
 ## OIDC Authentication
 
 This repository uses OpenID Connect (OIDC) for MCP Registry authentication:
 
-- **Automated (CI/CD)**: GitHub Actions workflow authenticates automatically using OIDC without secrets
+- **Automated (CI/CD)**: GitHub Actions `release.yml` workflow authenticates automatically using OIDC without secrets
 - **Manual (local)**: Requires domain credentials or dashboard access
 - **Security**: OIDC provides short-lived tokens, reducing credential exposure risk
 - **Domain verification**: Your domain (`self.agency`) must be verified with the MCP Registry

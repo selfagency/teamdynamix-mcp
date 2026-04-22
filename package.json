@@ -83,5 +83,5 @@
       "@hono/node-server": ">=1.19.13"
     }
   },
-  "mcpName": "agency.self/teamdynamix-mcp"
+  "mcpName": "io.github.selfagency/teamdynamix-mcp"
 }

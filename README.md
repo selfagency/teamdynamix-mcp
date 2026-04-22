@@ -19,10 +19,10 @@ A TypeScript [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) se
 
 ## MCP Registry
 
-This server is published to the [MCP Registry](https://modelcontextprotocol.io/) as `agency.self/teamdynamix-mcp`.
+This server is published to the [MCP Registry](https://modelcontextprotocol.io/) as `io.github.selfagency/teamdynamix-mcp`.
 
-- **Registry name**: `agency.self/teamdynamix-mcp`
-- **Install via registry**: `mcp-install agency.self/teamdynamix-mcp` (when available)
+- **Registry name**: `io.github.selfagency/teamdynamix-mcp`
+- **Install via registry**: `mcp-install io.github.selfagency/teamdynamix-mcp` (when available)
 - **Manual install**: Use npm package `@selfagency/teamdynamix-mcp` as shown below
 
 ## Quick start (developer setup)
