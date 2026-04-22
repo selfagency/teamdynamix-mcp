@@ -1,0 +1,37 @@
+package.json
+  h_5cf1e2c1161853 86
+docs/how-to/publish-mcp-registry.md
+  h_5cf1e2c1161853 23,52,59,68,74-75,125,136-137,146,153
+docs/public/server.json
+  h_5cf1e2c1161853 3
+README.md
+  h_5cf1e2c1161853 22,24-25
+.github/workflows/release.yml
+  h_5cf1e2c1161853 16,150,232-242
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "e573094b3cf7ac40a5c5b2b93d7e17d3ca14e5f2",
+  "prompts": {
+    "af531e7901b5229c": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "a67958d6-40ed-4643-be65-d26775944d19",
+        "model": "copilot/auto"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 43,
+      "accepted_lines": 36,
+      "overriden_lines": 3,
+      "messages_url": "https://usegitai.com/cas/44585b5516fada4df566295347bd19e6f29bcf2048efcb7fe67121873a061d3e"
+    }
+  },
+  "humans": {
+    "h_5cf1e2c1161853": {
+      "author": "Daniel Sieradski"
+    }
+  }
+}
