@@ -75,7 +75,7 @@ function renderObjectWithTables(obj: Record<string, unknown>): string {
   const lines: string[] = [];
   // First, emit scalar metadata as a bullet list
   const scalarEntries: [string, unknown][] = [];
-  const arrayEntries: [string, unknown][] = [];
+  const arrayEntries: [string, unknown[]][] = [];
 
   for (const [key, val] of Object.entries(obj)) {
     if (Array.isArray(val) && val.length > 0 && val.every(isPlainObject)) {
@@ -96,7 +96,7 @@ function renderObjectWithTables(obj: Record<string, unknown>): string {
   // Then render each array as a markdown table
   for (const [key, arr] of arrayEntries) {
     lines.push(`**${key}:**`);
-    const table = renderArrayAsMarkdownTable(arr);
+    const table = renderArrayAsMarkdownTable(arr as readonly Record<string, unknown>[]);
     lines.push(table);
     lines.push('');
   }
@@ -162,7 +162,7 @@ function truncateCell(str: string): string {
   return str.slice(0, MAX) + '…';
 }
 
-function truncateMarkdown(markdown: string, limit: string): string {
+function truncateMarkdown(markdown: string, limit: number): string {
   if (markdown.length <= limit) return markdown;
   // Truncate and append '...' (three dots) at the end, ensuring it is present and within limit.
   const ellipsis = '...';

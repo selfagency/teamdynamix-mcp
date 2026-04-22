@@ -9,12 +9,14 @@ async function main() {
   const rootPkgPath = resolve(__dirname, '..', 'package.json');
   const outDir = resolve(__dirname, '..', 'dist');
   const raw = await readFile(rootPkgPath, 'utf8');
-  const { name, version, description, keywords, homepage, bugs, repository, license, author } = JSON.parse(raw);
+  const { name, version, mcpName, description, keywords, homepage, bugs, repository, license, author } =
+    JSON.parse(raw);
   const binName = name.startsWith('@') ? (name.split('/')[1] ?? name) : name;
 
   const distPkg = {
     name,
     version,
+    mcpName,
     description,
     keywords,
     homepage,
