@@ -1,0 +1,14 @@
+src/services/teamdynamix/render.service.ts
+  h_5cf1e2c1161853 3,29-30,67-73,86,108,126,172-175
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "6c96cb17bbe76011be0bced47d44121616899d2d",
+  "prompts": {},
+  "humans": {
+    "h_5cf1e2c1161853": {
+      "author": "Daniel Sieradski"
+    }
+  }
+}
