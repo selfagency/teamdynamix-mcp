@@ -51,6 +51,7 @@ export interface TeamDynamixConfig {
   readonly maxRetries: number;
   readonly enableWriteTools: boolean;
   readonly enableAdminTools: boolean;
+  readonly enableDeleteTools: boolean;
 }
 
 export interface TeamDynamixConfigStatus {

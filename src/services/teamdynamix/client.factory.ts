@@ -320,6 +320,25 @@ export class UnifiedTeamDynamixClient {
   createProjectRisk(_projectId: number, body: Record<string, unknown>): Promise<unknown> {
     return this.sdk().then(s => s.projects.createRisk({ body }));
   }
+
+  //
+  // Delete mutations (confirm:true required for all)
+  //
+  deleteAsset(appId: number, assetId: number): Promise<unknown> {
+    return this.sdk().then(s => s.assets.deleteAsset({ appId, assetId, confirm: true }));
+  }
+  deleteConfigurationItem(appId: number, ciId: number): Promise<unknown> {
+    return this.sdk().then(s => s.cmdb.deleteConfigurationItem({ appId, configurationItemId: ciId, confirm: true }));
+  }
+  deleteService(appId: number, serviceId: number): Promise<unknown> {
+    return this.sdk().then(s => s.services.deleteService({ appId, serviceId, confirm: true }));
+  }
+  deleteServiceCategory(appId: number, categoryId: number): Promise<unknown> {
+    return this.sdk().then(s => s.services.deleteServiceCategory({ appId, categoryId, confirm: true }));
+  }
+  deleteTimeEntry(timeEntryId: number): Promise<unknown> {
+    return this.sdk().then(s => s.time.deleteTimeEntry({ timeEntryId, confirm: true }));
+  }
 }
 
 /** Creates a configured SDK-backed TeamDynamix client. */
@@ -330,5 +349,11 @@ export function createConfiguredTeamDynamixClient(): UnifiedTeamDynamixClient {
 export function assertWriteToolsEnabled(config: TeamDynamixConfig): void {
   if (!config.enableWriteTools) {
     throw new Error('Write tools are disabled. Set TEAMDYNAMIX_ENABLE_WRITE_TOOLS=true in your environment.');
+  }
+}
+
+export function assertDeleteToolsEnabled(config: TeamDynamixConfig): void {
+  if (!config.enableDeleteTools) {
+    throw new Error('Delete tools are disabled. Set TEAMDYNAMIX_ENABLE_DELETE_TOOLS=true in your environment.');
   }
 }

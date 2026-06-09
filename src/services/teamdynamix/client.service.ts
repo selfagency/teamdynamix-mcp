@@ -3,5 +3,6 @@
 export {
   createConfiguredTeamDynamixClient,
   assertWriteToolsEnabled,
+  assertDeleteToolsEnabled,
   UnifiedTeamDynamixClient,
 } from './client.factory.js';

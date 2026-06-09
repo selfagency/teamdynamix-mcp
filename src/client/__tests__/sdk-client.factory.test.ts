@@ -106,6 +106,7 @@ const baseConfig: TeamDynamixConfig = {
   maxRetries: 3,
   enableWriteTools: true,
   enableAdminTools: false,
+  enableDeleteTools: false,
 };
 
 describe('SDK Client Factory', () => {

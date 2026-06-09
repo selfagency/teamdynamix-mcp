@@ -123,6 +123,7 @@ export function getTeamDynamixConfig(): TeamDynamixConfig {
     maxRetries,
     enableWriteTools: normalizeBoolean(process.env['TEAMDYNAMIX_ENABLE_WRITE_TOOLS'], false),
     enableAdminTools: normalizeBoolean(process.env['TEAMDYNAMIX_ENABLE_ADMIN_TOOLS'], false),
+    enableDeleteTools: normalizeBoolean(process.env['TEAMDYNAMIX_ENABLE_DELETE_TOOLS'], false),
   };
 }
 
