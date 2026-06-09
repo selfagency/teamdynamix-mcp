@@ -38,7 +38,7 @@ export function registerTeamDynamixPeopleTools(server: McpServer): void {
         const user = await client.getUser(uid);
         return {
           content: [{ type: 'text', text: render(user, response_format) }],
-          structuredContent: user,
+          structuredContent: user as Record<string, unknown>,
         };
       } catch (error) {
         return { content: [{ type: 'text', text: `Error: ${messageFromError(error)}` }], isError: true };
@@ -94,7 +94,7 @@ export function registerTeamDynamixPeopleTools(server: McpServer): void {
         const group = await client.getGroup(group_id);
         return {
           content: [{ type: 'text', text: render(group, response_format) }],
-          structuredContent: group,
+          structuredContent: group as Record<string, unknown>,
         };
       } catch (error) {
         return { content: [{ type: 'text', text: `Error: ${messageFromError(error)}` }], isError: true };

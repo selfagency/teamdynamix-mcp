@@ -51,6 +51,7 @@ export interface TeamDynamixConfig {
   readonly maxRetries: number;
   readonly enableWriteTools: boolean;
   readonly enableAdminTools: boolean;
+  readonly enableDeleteTools: boolean;
 }
 
 export interface TeamDynamixConfigStatus {
@@ -83,3 +84,6 @@ export interface TeamDynamixRequestOptions {
   readonly expectedContentType?: 'json' | 'text';
   readonly requireAdmin?: boolean;
 }
+
+// SDK client types
+export type { TeamDynamixSdk } from '@selfagency/teamdynamix-ts';

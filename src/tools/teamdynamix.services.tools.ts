@@ -76,7 +76,7 @@ export function registerTeamDynamixServiceCatalogTools(server: McpServer): void 
         const service = await client.getService(app_id, service_id);
         return {
           content: [{ type: 'text', text: render(service, response_format) }],
-          structuredContent: service,
+          structuredContent: service as Record<string, unknown>,
         };
       } catch (error) {
         return { content: [{ type: 'text', text: `Error: ${messageFromError(error)}` }], isError: true };
@@ -162,7 +162,7 @@ export function registerTeamDynamixProjectTools(server: McpServer): void {
         const project = await client.getProject(project_id);
         return {
           content: [{ type: 'text', text: render(project, response_format) }],
-          structuredContent: project,
+          structuredContent: project as Record<string, unknown>,
         };
       } catch (error) {
         return { content: [{ type: 'text', text: `Error: ${messageFromError(error)}` }], isError: true };
@@ -328,7 +328,7 @@ export function registerTeamDynamixProjectTools(server: McpServer): void {
         const created = await client.createProjectIssue(project_id, issue as Record<string, unknown>);
         return {
           content: [{ type: 'text', text: render(created, response_format) }],
-          structuredContent: created,
+          structuredContent: created as Record<string, unknown>,
         };
       } catch (error) {
         return { content: [{ type: 'text', text: `Error: ${messageFromError(error)}` }], isError: true };
@@ -364,7 +364,7 @@ export function registerTeamDynamixProjectTools(server: McpServer): void {
         const created = await client.createProjectRisk(project_id, risk as Record<string, unknown>);
         return {
           content: [{ type: 'text', text: render(created, response_format) }],
-          structuredContent: created,
+          structuredContent: created as Record<string, unknown>,
         };
       } catch (error) {
         return { content: [{ type: 'text', text: `Error: ${messageFromError(error)}` }], isError: true };

@@ -46,6 +46,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
+    "@selfagency/teamdynamix-ts": "^0.1.3",
     "tablemark": "^4.1.0",
     "zod": "^4.4.3"
   },

@@ -25,7 +25,11 @@ import {
   TimeEntryQuerySchema,
   UserSearchSchema,
 } from '../schemas/teamdynamix/index.js';
-import { assertWriteToolsEnabled, createConfiguredTeamDynamixClient } from '../services/teamdynamix/client.service.js';
+import {
+  assertWriteToolsEnabled,
+  assertDeleteToolsEnabled,
+  createConfiguredTeamDynamixClient,
+} from '../services/teamdynamix/client.factory.js';
 import { redactTeamDynamixConfig } from '../services/teamdynamix/core.service.js';
 import { render } from '../services/teamdynamix/render.service.js';
 import type { ResponseFormat } from '../types.js';
@@ -83,6 +87,7 @@ const teamdynamixAssetsActionSchema = z.enum([
   'search_assets',
   'list_asset_statuses',
   'list_product_models',
+  'delete_asset',
 ]);
 
 const teamdynamixCmdbActionSchema = z.enum([
@@ -91,6 +96,7 @@ const teamdynamixCmdbActionSchema = z.enum([
   'list_ci_types',
   'list_ci_relationship_types',
   'list_vendors',
+  'delete_ci',
 ]);
 
 const teamdynamixServicesActionSchema = z.enum([
@@ -98,6 +104,8 @@ const teamdynamixServicesActionSchema = z.enum([
   'get_service',
   'search_services',
   'list_service_categories',
+  'delete_service',
+  'delete_service_category',
 ]);
 
 const teamdynamixProjectsActionSchema = z.enum([
@@ -152,14 +160,25 @@ function parsePayload<TSchema extends z.ZodTypeAny>(
   return parsed.data;
 }
 
-function toSuccessResponse(payload: unknown, responseFormat: ResponseFormat) {
+function toSuccessResponse(
+  payload: unknown,
+  responseFormat: ResponseFormat,
+): {
+  content: Array<{ type: 'text'; text: string }>;
+  structuredContent: Record<string, unknown>;
+  isError?: false;
+} {
   return {
     content: [{ type: 'text' as const, text: render(payload, responseFormat) }],
     structuredContent: toStructuredContent(payload),
   };
 }
 
-function toErrorResponse(error: unknown) {
+function toErrorResponse(error: unknown): {
+  content: Array<{ type: 'text'; text: string }>;
+  structuredContent: { ok: false; kind: string; message: string };
+  isError: true;
+} {
   const message = messageFromError(error);
 
   return {
@@ -757,6 +776,23 @@ function registerTeamDynamixAssetsGateway(server: McpServer): void {
             const models = await client.listProductModels(parsed.app_id);
             return toSuccessResponse({ appId: parsed.app_id, count: models.length, models }, response_format);
           }
+          case 'delete_asset': {
+            const parsed = parsePayload(
+              z.object({
+                app_id: TeamDynamixAppIdSchema,
+                asset_id: z.number().int().positive(),
+                confirm: z.literal(true),
+              }),
+              payload,
+              action,
+            );
+            assertDeleteToolsEnabled(getTeamDynamixConfig());
+            await client.deleteAsset(parsed.app_id, parsed.asset_id);
+            return toSuccessResponse(
+              { appId: parsed.app_id, assetId: parsed.asset_id, deleted: true },
+              response_format,
+            );
+          }
         }
       } catch (error) {
         return toErrorResponse(error);
@@ -818,6 +854,20 @@ function registerTeamDynamixCmdbGateway(server: McpServer): void {
             const vendors = await client.listVendors(parsed.app_id);
             return toSuccessResponse({ appId: parsed.app_id, count: vendors.length, vendors }, response_format);
           }
+          case 'delete_ci': {
+            const parsed = parsePayload(
+              z.object({
+                app_id: TeamDynamixAppIdSchema,
+                ci_id: z.number().int().positive(),
+                confirm: z.literal(true),
+              }),
+              payload,
+              action,
+            );
+            assertDeleteToolsEnabled(getTeamDynamixConfig());
+            await client.deleteConfigurationItem(parsed.app_id, parsed.ci_id);
+            return toSuccessResponse({ appId: parsed.app_id, ciId: parsed.ci_id, deleted: true }, response_format);
+          }
         }
       } catch (error) {
         return toErrorResponse(error);
@@ -871,6 +921,40 @@ function registerTeamDynamixServicesGateway(server: McpServer): void {
             const parsed = parsePayload(z.object({ app_id: TeamDynamixAppIdSchema }), payload, action);
             const categories = await client.listServiceCategories(parsed.app_id);
             return toSuccessResponse({ appId: parsed.app_id, count: categories.length, categories }, response_format);
+          }
+          case 'delete_service': {
+            const parsed = parsePayload(
+              z.object({
+                app_id: TeamDynamixAppIdSchema,
+                service_id: z.number().int().positive(),
+                confirm: z.literal(true),
+              }),
+              payload,
+              action,
+            );
+            assertDeleteToolsEnabled(getTeamDynamixConfig());
+            await client.deleteService(parsed.app_id, parsed.service_id);
+            return toSuccessResponse(
+              { appId: parsed.app_id, serviceId: parsed.service_id, deleted: true },
+              response_format,
+            );
+          }
+          case 'delete_service_category': {
+            const parsed = parsePayload(
+              z.object({
+                app_id: TeamDynamixAppIdSchema,
+                category_id: z.number().int().positive(),
+                confirm: z.literal(true),
+              }),
+              payload,
+              action,
+            );
+            assertDeleteToolsEnabled(getTeamDynamixConfig());
+            await client.deleteServiceCategory(parsed.app_id, parsed.category_id);
+            return toSuccessResponse(
+              { appId: parsed.app_id, categoryId: parsed.category_id, deleted: true },
+              response_format,
+            );
           }
         }
       } catch (error) {

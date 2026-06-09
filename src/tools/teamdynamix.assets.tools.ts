@@ -46,7 +46,7 @@ export function registerTeamDynamixAssetTools(server: McpServer): void {
         const asset = await client.getAsset(app_id, asset_id);
         return {
           content: [{ type: 'text', text: render(asset, response_format) }],
-          structuredContent: asset,
+          structuredContent: asset as Record<string, unknown>,
         };
       } catch (error) {
         return { content: [{ type: 'text', text: `Error: ${messageFromError(error)}` }], isError: true };

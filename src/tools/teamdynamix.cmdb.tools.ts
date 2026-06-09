@@ -42,7 +42,7 @@ export function registerTeamDynamixCmdbTools(server: McpServer): void {
         const ci = await client.getConfigurationItem(app_id, ci_id);
         return {
           content: [{ type: 'text', text: render(ci, response_format) }],
-          structuredContent: ci,
+          structuredContent: ci as Record<string, unknown>,
         };
       } catch (error) {
         return { content: [{ type: 'text', text: `Error: ${messageFromError(error)}` }], isError: true };

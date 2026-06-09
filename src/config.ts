@@ -25,6 +25,18 @@ const logLevelSchema = z.enum(validLogLevels);
 const parsedLogLevel = logLevelSchema.safeParse(process.env['MCP_LOG_LEVEL']?.trim());
 export const LOG_LEVEL: LogLevel = parsedLogLevel.success ? parsedLogLevel.data : 'info';
 
+/**
+ * Whether to use the TeamDynamix SDK instead of the HTTP client.
+ */
+/**
+ * Whether to use the TeamDynamix SDK instead of the HTTP client.
+ * Evaluated lazily so tests can set env vars via beforeEach.
+ */
+export function isUseSdk(): boolean {
+  const parsed = z.enum(['true', 'false']).safeParse(process.env['TEAMDYNAMIX_USE_SDK']?.trim().toLowerCase());
+  return parsed.success ? parsed.data === 'true' : true;
+}
+
 function normalizeOptionalString(value: string | undefined): string | undefined {
   const normalized = value?.trim();
   return normalized ? normalized : undefined;
@@ -111,6 +123,7 @@ export function getTeamDynamixConfig(): TeamDynamixConfig {
     maxRetries,
     enableWriteTools: normalizeBoolean(process.env['TEAMDYNAMIX_ENABLE_WRITE_TOOLS'], false),
     enableAdminTools: normalizeBoolean(process.env['TEAMDYNAMIX_ENABLE_ADMIN_TOOLS'], false),
+    enableDeleteTools: normalizeBoolean(process.env['TEAMDYNAMIX_ENABLE_DELETE_TOOLS'], false),
   };
 }
 

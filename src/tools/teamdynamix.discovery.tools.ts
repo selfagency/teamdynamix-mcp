@@ -43,7 +43,7 @@ export function registerTeamDynamixDiscoveryTools(server: McpServer): void {
 
       return {
         content: [{ type: 'text', text: render(payload, response_format) }],
-        structuredContent: payload,
+        structuredContent: payload as Record<string, unknown>,
       };
     },
   );
@@ -69,7 +69,7 @@ export function registerTeamDynamixDiscoveryTools(server: McpServer): void {
         const user = await client.getCurrentUser();
         return {
           content: [{ type: 'text', text: render(user, response_format) }],
-          structuredContent: user,
+          structuredContent: user as Record<string, unknown>,
         };
       } catch (error) {
         return {
@@ -109,7 +109,7 @@ export function registerTeamDynamixDiscoveryTools(server: McpServer): void {
         };
         return {
           content: [{ type: 'text', text: render(payload, response_format) }],
-          structuredContent: payload,
+          structuredContent: payload as Record<string, unknown>,
         };
       } catch (error) {
         return {
@@ -159,7 +159,7 @@ export function registerTeamDynamixDiscoveryTools(server: McpServer): void {
         };
         return {
           content: [{ type: 'text', text: render(payload, response_format) }],
-          structuredContent: payload,
+          structuredContent: payload as Record<string, unknown>,
         };
       } catch (error) {
         return {

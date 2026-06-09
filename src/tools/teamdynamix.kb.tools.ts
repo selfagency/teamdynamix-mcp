@@ -49,7 +49,7 @@ export function registerTeamDynamixKbTools(server: McpServer): void {
         const article = await client.getKbArticle(app_id, article_id);
         return {
           content: [{ type: 'text', text: render(article, response_format) }],
-          structuredContent: article,
+          structuredContent: article as Record<string, unknown>,
         };
       } catch (error) {
         return { content: [{ type: 'text', text: `Error: ${messageFromError(error)}` }], isError: true };
@@ -144,7 +144,7 @@ export function registerTeamDynamixKbTools(server: McpServer): void {
         const created = await client.createKbArticle(app_id, article as Record<string, unknown>);
         return {
           content: [{ type: 'text', text: render(created, response_format) }],
-          structuredContent: created,
+          structuredContent: created as Record<string, unknown>,
         };
       } catch (error) {
         return { content: [{ type: 'text', text: `Error: ${messageFromError(error)}` }], isError: true };
@@ -182,7 +182,7 @@ export function registerTeamDynamixKbTools(server: McpServer): void {
         const updated = await client.updateKbArticle(app_id, ArticleID, body as Record<string, unknown>);
         return {
           content: [{ type: 'text', text: render(updated, response_format) }],
-          structuredContent: updated,
+          structuredContent: updated as Record<string, unknown>,
         };
       } catch (error) {
         return { content: [{ type: 'text', text: `Error: ${messageFromError(error)}` }], isError: true };
