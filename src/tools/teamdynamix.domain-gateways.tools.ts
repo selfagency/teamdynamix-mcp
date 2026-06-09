@@ -25,7 +25,7 @@ import {
   TimeEntryQuerySchema,
   UserSearchSchema,
 } from '../schemas/teamdynamix/index.js';
-import { assertWriteToolsEnabled, createConfiguredTeamDynamixClient } from '../services/teamdynamix/client.service.js';
+import { assertWriteToolsEnabled, createConfiguredTeamDynamixClient } from '../services/teamdynamix/client.factory.js';
 import { redactTeamDynamixConfig } from '../services/teamdynamix/core.service.js';
 import { render } from '../services/teamdynamix/render.service.js';
 import type { ResponseFormat } from '../types.js';
