@@ -242,3 +242,7 @@ $RECYCLE.BIN/
 
 package-lock.json
 results.sarif
+
+
+#Ignore vscode AI rules
+.github/instructions/codacy.instructions.md

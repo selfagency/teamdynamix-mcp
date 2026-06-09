@@ -127,17 +127,18 @@ If GitHub Actions workflow `.github/workflows/release.yml` fails:
 1. Check workflow logs for specific error
 2. Confirm OIDC permissions are present (`id-token: write`, `contents: read`)
 3. Verify domain ownership is configured for `self.agency`
-4. If the failure was in the manual dispatch path, confirm the workflow could update `package.json` and `CHANGELOG.md` on `main`
-5. Confirm the release tag points at the latest `main` commit after CI passes
+4. If the failure was in the manual dispatch path, confirm a valid `version` input was provided (for example `1.2.3` or `v1.2.3`)
+5. Confirm the selected run ref/commit is the one you intend to release
 6. Confirm `docs/public/server.json` is committed to the branch/tag being published
 7. Re-run workflow after fixing issue
 
 ## Automation notes
 
 - **Automated trigger**: The workflow runs automatically on git tags matching `v*` (e.g., `v0.2.0`)
-- **Manual trigger**: Use GitHub Actions UI to run `Release` with a version input; it updates `package.json` and `CHANGELOG.md`, pushes `main`, waits for CI, and creates the annotated release tag
-- **Tag trigger**: The pushed release tag starts the publish phase automatically
-- **Publish order**: The tag-triggered phase publishes the npm package first, then publishes MCP Registry metadata from `docs/public/server.json`
+- **Manual trigger**: Use GitHub Actions UI to run `Release` with a required `version` input (`1.2.3` or `v1.2.3`)
+- **Manual run behavior**: The workflow validates/builds/tests the selected ref, derives the release tag from `version`, then publishes npm + GitHub Release + MCP Registry metadata
+- **Tag trigger**: Pushing a `v*` tag runs the same workflow and uses that tag as release metadata
+- **Publish order**: After CI succeeds, the workflow publishes npm first, then GitHub Release assets/notes, then MCP Registry metadata from `docs/public/server.json`
 
 ## Required secrets
 

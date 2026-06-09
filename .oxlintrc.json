@@ -4,6 +4,7 @@
   "categories": {},
   "rules": {
     "jest/valid-expect": "off",
+    "jest/require-to-throw-message": "off",
     "vitest/require-mock-type-parameters": "off"
   },
   "settings": {

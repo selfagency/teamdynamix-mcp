@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (for example: 1.2.3 or v1.2.3)"
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -13,8 +19,47 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  prepare:
+    name: Resolve release metadata
+    runs-on: ubuntu-latest
+    outputs:
+      tag_name: ${{ steps.release_meta.outputs.tag_name }}
+      dist_tag: ${{ steps.release_meta.outputs.dist_tag }}
+    steps:
+      - name: Resolve release tag + npm dist-tag
+        id: release_meta
+        shell: bash
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            RAW_VERSION="${INPUT_VERSION}"
+          else
+            RAW_VERSION="${GITHUB_REF_NAME}"
+          fi
+
+          RAW_VERSION="${RAW_VERSION#v}"
+
+          if [[ ! "${RAW_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Invalid version: ${RAW_VERSION}. Expected SemVer format like 1.2.3 or 1.2.3-rc.1"
+            exit 1
+          fi
+
+          TAG_NAME="v${RAW_VERSION}"
+          if [[ "${TAG_NAME}" == *-* ]]; then
+            DIST_TAG="next"
+          else
+            DIST_TAG="latest"
+          fi
+
+          echo "tag_name=${TAG_NAME}" >> "$GITHUB_OUTPUT"
+          echo "dist_tag=${DIST_TAG}" >> "$GITHUB_OUTPUT"
+
   ci:
     name: Validate release tag build
+    needs: prepare
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -51,7 +96,9 @@ jobs:
 
   publish:
     name: Publish npm + MCP + GitHub Release
-    needs: ci
+    needs:
+      - prepare
+      - ci
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -64,11 +111,21 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Ensure release tag exists locally
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! git rev-parse "${TAG_NAME}" >/dev/null 2>&1; then
+            git tag "${TAG_NAME}" "${GITHUB_SHA}"
+          fi
+        env:
+          TAG_NAME: ${{ needs.prepare.outputs.tag_name }}
+
       - name: Build changelog
         id: changelog_notes
         uses: mikepenz/release-changelog-builder-action@v6
         with:
-          toTag: ${{ github.ref_name }}
+          toTag: ${{ needs.prepare.outputs.tag_name }}
           failOnError: "true"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -93,21 +150,10 @@ jobs:
       - name: Build dist
         run: pnpm build
 
-      - name: Resolve npm dist-tag
-        id: npm_tag
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [[ "${GITHUB_REF_NAME}" == *-* ]]; then
-            echo "dist_tag=next" >> "$GITHUB_OUTPUT"
-          else
-            echo "dist_tag=latest" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Publish package to npm (OIDC)
         env:
           NODE_AUTH_TOKEN: ""
-        run: npm publish ./dist --access public --provenance --tag "${{ steps.npm_tag.outputs.dist_tag }}"
+        run: npm publish ./dist --access public --provenance --tag "${{ needs.prepare.outputs.dist_tag }}"
 
       - name: Pack npm tarball
         run: npm pack ./dist --pack-destination .
@@ -115,11 +161,11 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
-          tag_name: ${{ github.ref_name }}
+          tag_name: ${{ needs.prepare.outputs.tag_name }}
           body_path: release-notes.md
           files: "*.tgz"
           draft: false
-          prerelease: ${{ contains(github.ref_name, '-') }}
+          prerelease: ${{ contains(needs.prepare.outputs.tag_name, '-') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
