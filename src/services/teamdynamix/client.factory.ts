@@ -112,9 +112,7 @@ export class UnifiedTeamDynamixClient {
 
   createTicketTask(appId: number, ticketId: number, body: Record<string, unknown>): Promise<unknown> {
     if (!USE_SDK) return this.httpClient.createTicketTask(appId, ticketId, body);
-    return this.sdk().then(s =>
-      s.ticketRelationships.appIdTicketsTicketIdTasks({ params: { path: { appId, ticketId } } }),
-    );
+    return this.sdk().then(s => s.ticketRelationships.createTicketTask({ appId, ticketId, body }));
   }
 
   listTicketAssets(appId: number, ticketId: number): Promise<readonly unknown[]> {
@@ -126,16 +124,14 @@ export class UnifiedTeamDynamixClient {
 
   addTicketAsset(appId: number, ticketId: number, assetId: number): Promise<unknown> {
     if (!USE_SDK) return this.httpClient.addTicketAsset(appId, ticketId, assetId);
-    return this.sdk().then(s =>
-      s.ticketRelationships.appIdTicketsIdAssets({ params: { path: { appId, id: ticketId } } }),
-    );
+    return this.sdk().then(s => s.ticketRelationships.addTicketAsset({ appId, ticketId, assetId }));
   }
 
   removeTicketAsset(appId: number, ticketId: number, assetId: number): Promise<void> {
     if (!USE_SDK) return this.httpClient.removeTicketAsset(appId, ticketId, assetId);
-    return this.sdk().then(s => {
-      s.ticketRelationships.appIdTicketsIdAssets({ params: { path: { appId, id: ticketId } } });
-    }) as Promise<void>;
+    return this.sdk().then(s =>
+      s.ticketRelationships.removeTicketAsset({ appId, ticketId, assetId, confirm: true }),
+    ) as Promise<void>;
   }
 
   getTicketContacts(appId: number, ticketId: number): Promise<readonly unknown[]> {
@@ -147,16 +143,14 @@ export class UnifiedTeamDynamixClient {
 
   addTicketContact(appId: number, ticketId: number, contactUid: string): Promise<unknown> {
     if (!USE_SDK) return this.httpClient.addTicketContact(appId, ticketId, contactUid);
-    return this.sdk().then(s =>
-      s.ticketRelationships.appIdTicketsIdContacts({ params: { path: { appId, id: ticketId } } }),
-    );
+    return this.sdk().then(s => s.ticketRelationships.addTicketContact({ appId, ticketId, contactUid }));
   }
 
   removeTicketContact(appId: number, ticketId: number, contactUid: string): Promise<void> {
     if (!USE_SDK) return this.httpClient.removeTicketContact(appId, ticketId, contactUid);
-    return this.sdk().then(s => {
-      s.ticketRelationships.appIdTicketsIdContacts({ params: { path: { appId, id: ticketId } } });
-    }) as Promise<void>;
+    return this.sdk().then(s =>
+      s.ticketRelationships.removeTicketContact({ appId, ticketId, contactUid, confirm: true }),
+    ) as Promise<void>;
   }
 
   // ---------------------------------------------------------------------------
@@ -415,7 +409,7 @@ export class UnifiedTeamDynamixClient {
     notifyResponsible?: boolean,
   ): Promise<unknown> {
     if (!USE_SDK) return this.httpClient.createTicket(appId, body, notifyRequestor, notifyResponsible);
-    return this.sdk().then(s => s.tickets.appIdTicketsId({ params: { path: { appId, id: 0 } } }));
+    return this.sdk().then(s => s.tickets.createTicket({ appId, body }));
   }
 
   updateTicket(
@@ -437,7 +431,7 @@ export class UnifiedTeamDynamixClient {
         comments,
         isPrivate,
       );
-    return this.sdk().then(s => s.tickets.appIdTicketsId({ params: { path: { appId, id: ticketId } } }));
+    return this.sdk().then(s => s.tickets.updateTicket({ appId, ticketId, body }));
   }
 
   addTicketComment(
@@ -450,27 +444,38 @@ export class UnifiedTeamDynamixClient {
   ): Promise<unknown> {
     if (!USE_SDK)
       return this.httpClient.addTicketComment(appId, ticketId, body, isPrivate, notifyRequestor, notifyResponsible);
-    return this.sdk().then(s => s.tickets.appIdTicketsId({ params: { path: { appId, id: ticketId } } }));
+    return this.sdk().then(s =>
+      s.tickets.addTicketComment({
+        appId,
+        ticketId,
+        body: {
+          Body: body,
+          IsPrivate: isPrivate,
+          NotifyRequestor: notifyRequestor,
+          NotifyResponsible: notifyResponsible,
+        },
+      }),
+    );
   }
 
   createKbArticle(appId: number, body: Record<string, unknown>): Promise<unknown> {
     if (!USE_SDK) return this.httpClient.createKbArticle(appId, body);
-    return this.sdk().then(s => s.knowledgeBase.appIdKnowledgebaseId({ params: { path: { appId, id: 0 } } }));
+    return this.sdk().then(s => s.knowledgeBase.createArticle({ appId, body }));
   }
 
   updateKbArticle(appId: number, articleId: number, body: Record<string, unknown>): Promise<unknown> {
     if (!USE_SDK) return this.httpClient.updateKbArticle(appId, articleId, body);
-    return this.sdk().then(s => s.knowledgeBase.appIdKnowledgebaseId({ params: { path: { appId, id: articleId } } }));
+    return this.sdk().then(s => s.knowledgeBase.updateArticle({ appId, articleId, body }));
   }
 
   createProjectIssue(projectId: number, body: Record<string, unknown>): Promise<unknown> {
     if (!USE_SDK) return this.httpClient.createProjectIssue(projectId, body);
-    return this.sdk().then(s => s.projects.projectsFeed({ params: { path: { id: projectId } } }));
+    return this.sdk().then(s => s.projects.createIssue({ body }));
   }
 
   createProjectRisk(projectId: number, body: Record<string, unknown>): Promise<unknown> {
     if (!USE_SDK) return this.httpClient.createProjectRisk(projectId, body);
-    return this.sdk().then(s => s.projects.projectsFeed({ params: { path: { id: projectId } } }));
+    return this.sdk().then(s => s.projects.createRisk({ body }));
   }
 }
 
