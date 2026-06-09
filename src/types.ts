@@ -83,3 +83,6 @@ export interface TeamDynamixRequestOptions {
   readonly expectedContentType?: 'json' | 'text';
   readonly requireAdmin?: boolean;
 }
+
+// SDK client types
+export type { TeamDynamixSdk } from '@selfagency/teamdynamix-ts';

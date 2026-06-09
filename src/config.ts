@@ -25,6 +25,12 @@ const logLevelSchema = z.enum(validLogLevels);
 const parsedLogLevel = logLevelSchema.safeParse(process.env['MCP_LOG_LEVEL']?.trim());
 export const LOG_LEVEL: LogLevel = parsedLogLevel.success ? parsedLogLevel.data : 'info';
 
+/**
+ * Whether to use the TeamDynamix SDK instead of the HTTP client.
+ */
+const parsedUseSdk = z.enum(['true', 'false']).safeParse(process.env['TEAMDYNAMIX_USE_SDK']?.trim().toLowerCase());
+export const USE_SDK: boolean = parsedUseSdk.success ? parsedUseSdk.data === 'true' : false;
+
 function normalizeOptionalString(value: string | undefined): string | undefined {
   const normalized = value?.trim();
   return normalized ? normalized : undefined;
