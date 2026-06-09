@@ -41,7 +41,7 @@ export function registerTeamDynamixTicketTools(server: McpServer): void {
         const payload = { appId: app_id, types };
         return {
           content: [{ type: 'text', text: render(payload, response_format) }],
-          structuredContent: payload,
+          structuredContent: payload as Record<string, unknown>,
         };
       } catch (error) {
         return { content: [{ type: 'text', text: `Error: ${messageFromError(error)}` }], isError: true };
@@ -179,7 +179,7 @@ export function registerTeamDynamixTicketTools(server: McpServer): void {
         const ticket = await client.getTicket(app_id, ticket_id);
         return {
           content: [{ type: 'text', text: render(ticket, response_format) }],
-          structuredContent: ticket,
+          structuredContent: ticket as Record<string, unknown>,
         };
       } catch (error) {
         return { content: [{ type: 'text', text: `Error: ${messageFromError(error)}` }], isError: true };
@@ -261,7 +261,7 @@ export function registerTeamDynamixTicketTools(server: McpServer): void {
         );
         return {
           content: [{ type: 'text', text: render(created, response_format) }],
-          structuredContent: created,
+          structuredContent: created as Record<string, unknown>,
         };
       } catch (error) {
         return { content: [{ type: 'text', text: `Error: ${messageFromError(error)}` }], isError: true };
@@ -306,7 +306,7 @@ export function registerTeamDynamixTicketTools(server: McpServer): void {
         );
         return {
           content: [{ type: 'text', text: render(updated, response_format) }],
-          structuredContent: updated,
+          structuredContent: updated as Record<string, unknown>,
         };
       } catch (error) {
         return { content: [{ type: 'text', text: `Error: ${messageFromError(error)}` }], isError: true };
@@ -349,7 +349,7 @@ export function registerTeamDynamixTicketTools(server: McpServer): void {
         );
         return {
           content: [{ type: 'text', text: render(entry, response_format) }],
-          structuredContent: entry,
+          structuredContent: entry as Record<string, unknown>,
         };
       } catch (error) {
         return { content: [{ type: 'text', text: `Error: ${messageFromError(error)}` }], isError: true };

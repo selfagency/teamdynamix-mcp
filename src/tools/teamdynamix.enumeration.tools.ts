@@ -69,7 +69,7 @@ export function registerTeamDynamixEnumerationTools(server: McpServer): void {
         const account = await client.getAccount(account_id);
         return {
           content: [{ type: 'text', text: render(account, response_format) }],
-          structuredContent: account,
+          structuredContent: account as Record<string, unknown>,
         };
       } catch (error) {
         return { content: [{ type: 'text', text: `Error: ${messageFromError(error)}` }], isError: true };

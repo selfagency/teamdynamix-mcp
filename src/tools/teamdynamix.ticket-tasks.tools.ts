@@ -86,7 +86,7 @@ export function registerTeamDynamixTicketTaskTools(server: McpServer): void {
         const created = await client.createTicketTask(app_id, task.TicketID, task as Record<string, unknown>);
         return {
           content: [{ type: 'text', text: render(created, response_format) }],
-          structuredContent: created,
+          structuredContent: created as Record<string, unknown>,
         };
       } catch (error) {
         return { content: [{ type: 'text', text: `Error: ${messageFromError(error)}` }], isError: true };
@@ -159,7 +159,7 @@ export function registerTeamDynamixTicketTaskTools(server: McpServer): void {
         const result = await client.addTicketAsset(app_id, ticket_id, asset_id);
         return {
           content: [{ type: 'text', text: render(result, response_format) }],
-          structuredContent: result,
+          structuredContent: result as Record<string, unknown>,
         };
       } catch (error) {
         return { content: [{ type: 'text', text: `Error: ${messageFromError(error)}` }], isError: true };
@@ -266,7 +266,7 @@ export function registerTeamDynamixTicketContactTools(server: McpServer): void {
         const result = await client.addTicketContact(app_id, ticket_id, contact_uid);
         return {
           content: [{ type: 'text', text: render(result, response_format) }],
-          structuredContent: result,
+          structuredContent: result as Record<string, unknown>,
         };
       } catch (error) {
         return { content: [{ type: 'text', text: `Error: ${messageFromError(error)}` }], isError: true };

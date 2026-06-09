@@ -15,3 +15,5 @@ export type {
   ReportPage,
   BulkResult,
 } from '@selfagency/teamdynamix-ts';
+
+export { projectFields, previewEntity, runTicketReport, bulkAddUsersToGroup } from '@selfagency/teamdynamix-ts';

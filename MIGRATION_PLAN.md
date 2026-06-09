@@ -29,7 +29,7 @@
 
 ### Current Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │ MCP Server Entry Point (src/index.ts)                       │
 ├─────────────────────────────────────────────────────────────┤
@@ -56,7 +56,7 @@
 
 ### Target Architecture with SDK
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │ MCP Server Entry Point (src/index.ts)                       │
 ├─────────────────────────────────────────────────────────────┤
@@ -145,6 +145,7 @@
    - File: `src/client/sdk-client.factory.ts`
    - Export `createMcpSdkClient(config: TeamDynamixConfig): Promise<TeamDynamixClient>`
    - Map existing config to SDK config:
+
      ```typescript
      const sdkConfig: TeamDynamixClientConfig = {
        tenant: extractTenant(config.baseUrl),
@@ -164,6 +165,7 @@
    - File: `src/client/token-provider.factory.ts`
    - Function `createTokenProvider(config: TeamDynamixConfig): () => string | Promise<string>`
    - Handle both auth modes:
+
      ```typescript
      if (config.authMode === 'admin') {
        return loginWithServiceAccount({
@@ -202,6 +204,7 @@
 5. **Update type definitions**
    - File: `src/types.ts`
    - Add SDK types:
+
      ```typescript
      import type { TeamDynamixClient } from '@selfagency/teamdynamix-ts';
      import { projectFields, previewEntity, bulkAddUsersToGroup, runTicketReport } from '@selfagency/teamdynamix-ts';

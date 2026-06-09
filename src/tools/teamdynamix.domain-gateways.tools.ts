@@ -152,14 +152,25 @@ function parsePayload<TSchema extends z.ZodTypeAny>(
   return parsed.data;
 }
 
-function toSuccessResponse(payload: unknown, responseFormat: ResponseFormat) {
+function toSuccessResponse(
+  payload: unknown,
+  responseFormat: ResponseFormat,
+): {
+  content: Array<{ type: 'text'; text: string }>;
+  structuredContent: Record<string, unknown>;
+  isError?: false;
+} {
   return {
     content: [{ type: 'text' as const, text: render(payload, responseFormat) }],
     structuredContent: toStructuredContent(payload),
   };
 }
 
-function toErrorResponse(error: unknown) {
+function toErrorResponse(error: unknown): {
+  content: Array<{ type: 'text'; text: string }>;
+  structuredContent: { ok: false; kind: string; message: string };
+  isError: true;
+} {
   const message = messageFromError(error);
 
   return {

@@ -6,13 +6,15 @@ A TypeScript [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) se
 
 ## Features
 
+- **Powered by the official TeamDynamix TypeScript SDK**: type-safe, auto-generated API methods with built-in retry, exponential backoff, runtime validation, and token lifecycle management
 - **11 domain gateway tools** that route validated actions across discovery,
   tickets, relationships, KB, assets, CMDB, people, services, projects,
   time, and reference data
 - **Safe by default**: write tools disabled until explicitly opted in;
   destructive operations require `confirm: true`
 - **Two auth modes**: standard (username/password) and admin (BEID/WebServicesKey)
-- **Rate-limit aware**: auto-retry with backoff on 429 responses
+- **Covers 207 API endpoints** across all TeamDynamix domains, verified against the SDK route manifest
+- **Rate-limit aware**: SDK built-in retry with exponential backoff on 429 and 5xx responses
 - **Zod-validated inputs**: schema enforcement before any API call
 - **Agent skill and prompt included**: ready-to-use skill definition for
   GitHub Copilot and compatible agents
