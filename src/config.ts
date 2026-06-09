@@ -28,8 +28,14 @@ export const LOG_LEVEL: LogLevel = parsedLogLevel.success ? parsedLogLevel.data 
 /**
  * Whether to use the TeamDynamix SDK instead of the HTTP client.
  */
-const parsedUseSdk = z.enum(['true', 'false']).safeParse(process.env['TEAMDYNAMIX_USE_SDK']?.trim().toLowerCase());
-export const USE_SDK: boolean = parsedUseSdk.success ? parsedUseSdk.data === 'true' : false;
+/**
+ * Whether to use the TeamDynamix SDK instead of the HTTP client.
+ * Evaluated lazily so tests can set env vars via beforeEach.
+ */
+export function isUseSdk(): boolean {
+  const parsed = z.enum(['true', 'false']).safeParse(process.env['TEAMDYNAMIX_USE_SDK']?.trim().toLowerCase());
+  return parsed.success ? parsed.data === 'true' : true;
+}
 
 function normalizeOptionalString(value: string | undefined): string | undefined {
   const normalized = value?.trim();
