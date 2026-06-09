@@ -11,9 +11,7 @@ export class UnifiedTeamDynamixClient {
   constructor(private readonly config: TeamDynamixConfig) {}
 
   private sdk() {
-    if (!this.sdkPromise) {
-      this.sdkPromise = createMcpSdkClient(this.config);
-    }
+    this.sdkPromise ??= createMcpSdkClient(this.config);
     return this.sdkPromise;
   }
 
@@ -114,9 +112,10 @@ export class UnifiedTeamDynamixClient {
     return this.sdk().then(s => s.people.peopleUid({ params: { path: { uid } } }));
   }
   searchUsers(body: Record<string, unknown>): Promise<readonly unknown[]> {
-    return this.sdk().then(s =>
-      s.people.peopleLookup({ body: { SearchText: String(body['SearchText'] ?? '') } }),
-    ) as Promise<readonly unknown[]>;
+    const searchText = typeof body['SearchText'] === 'string' ? body['SearchText'] : '';
+    return this.sdk().then(s => s.people.peopleLookup({ body: { SearchText: searchText } })) as Promise<
+      readonly unknown[]
+    >;
   }
   getGroup(groupId: number): Promise<unknown> {
     return this.sdk().then(s => s.people.groupsId({ params: { path: { id: groupId } } }));
@@ -136,10 +135,19 @@ export class UnifiedTeamDynamixClient {
   getKbArticle(appId: number, articleId: number): Promise<unknown> {
     return this.sdk().then(s => s.knowledgeBase.appIdKnowledgebaseId({ params: { path: { appId, id: articleId } } }));
   }
-  searchKbArticles(appId: number, _body: Record<string, unknown>): Promise<readonly unknown[]> {
-    return this.sdk().then(s =>
-      s.knowledgeBase.appIdKnowledgebaseCategories({ params: { path: { appId } } }),
-    ) as Promise<readonly unknown[]>;
+  searchKbArticles(appId: number, body: Record<string, unknown>): Promise<readonly unknown[]> {
+    const keyword = typeof body['SearchText'] === 'string' ? body['SearchText'] : '';
+    // Perform a simple keyword lookup via the knowledgebase article endpoint
+    return this.sdk()
+      .then(s => s.knowledgeBase.appIdKnowledgebaseId({ params: { path: { appId, id: 0 } } }))
+      .then(r =>
+        Array.isArray(r)
+          ? r.filter(item => {
+              const s = typeof item === 'object' && item !== null ? JSON.stringify(item).toLowerCase() : '';
+              return keyword ? s.includes(keyword.toLowerCase()) : true;
+            })
+          : [],
+      ) as Promise<readonly unknown[]>;
   }
   listKbCategories(appId: number): Promise<readonly unknown[]> {
     return this.sdk().then(s =>
@@ -203,10 +211,19 @@ export class UnifiedTeamDynamixClient {
   getService(appId: number, serviceId: number): Promise<unknown> {
     return this.sdk().then(s => s.services.appIdServicesId({ params: { path: { appId, id: serviceId } } }));
   }
-  searchServices(appId: number, _body: Record<string, unknown>): Promise<readonly unknown[]> {
-    return this.sdk().then(s => s.services.appIdServicesCategories({ params: { path: { appId } } })) as Promise<
-      readonly unknown[]
-    >;
+  searchServices(appId: number, body: Record<string, unknown>): Promise<readonly unknown[]> {
+    const keyword = typeof body['Keyword'] === 'string' ? body['Keyword'] : '';
+    return this.sdk()
+      .then(s => s.services.appIdServices({ params: { path: { appId } } }))
+      .then(r => {
+        if (!Array.isArray(r)) return [];
+        if (!keyword) return r;
+        const lower = keyword.toLowerCase();
+        return r.filter(item => {
+          const text = typeof item === 'object' && item !== null ? JSON.stringify(item).toLowerCase() : '';
+          return text.includes(lower);
+        });
+      }) as Promise<readonly unknown[]>;
   }
   listServiceCategories(appId: number): Promise<readonly unknown[]> {
     return this.sdk().then(s => s.services.appIdServicesCategories({ params: { path: { appId } } })) as Promise<
