@@ -1,185 +1,325 @@
-name: Release (CI-first)
+name: Release
 
 on:
   push:
-    tags:
-      - "v*"
+    tags: [ "v*" ]
   workflow_dispatch:
     inputs:
       version:
-        description: "Release version (for example: 1.2.3 or v1.2.3)"
+        description: "Version to release (e.g. 1.2.3)"
         required: true
         type: string
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  prepare:
-    name: Resolve release metadata
+  detect-tag:
+    name: Detect release tag and readiness
     runs-on: ubuntu-latest
-    outputs:
-      tag_name: ${{ steps.release_meta.outputs.tag_name }}
-      dist_tag: ${{ steps.release_meta.outputs.dist_tag }}
-    steps:
-      - name: Resolve release tag + npm dist-tag
-        id: release_meta
-        shell: bash
-        env:
-          INPUT_VERSION: ${{ inputs.version }}
-        run: |
-          set -euo pipefail
-
-          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
-            RAW_VERSION="${INPUT_VERSION}"
-          else
-            RAW_VERSION="${GITHUB_REF_NAME}"
-          fi
-
-          RAW_VERSION="${RAW_VERSION#v}"
-
-          if [[ ! "${RAW_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
-            echo "Invalid version: ${RAW_VERSION}. Expected SemVer format like 1.2.3 or 1.2.3-rc.1"
-            exit 1
-          fi
-
-          TAG_NAME="v${RAW_VERSION}"
-          if [[ "${TAG_NAME}" == *-* ]]; then
-            DIST_TAG="next"
-          else
-            DIST_TAG="latest"
-          fi
-
-          echo "tag_name=${TAG_NAME}" >> "$GITHUB_OUTPUT"
-          echo "dist_tag=${DIST_TAG}" >> "$GITHUB_OUTPUT"
-
-  ci:
-    name: Validate release tag build
-    needs: prepare
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 5
     permissions:
-      contents: read
+      contents: write
+      actions: read
+
+    outputs:
+      release_tag: ${{ steps.tag.outputs.release_tag }}
+      ready: ${{ steps.tag.outputs.ready }}
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Resolve tag and verify CI readiness
+        id: tag
+        uses: actions/github-script@v8
         with:
-          fetch-depth: 0
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
 
-      - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: 20
+            let tagName;
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+            if (context.eventName === 'workflow_dispatch') {
+              const versionInput = '${{ inputs.version }}'.trim();
+              if (!versionInput) {
+                core.setFailed('version input is required for workflow_dispatch.');
+                return;
+              }
+              tagName = versionInput.startsWith('v') ? versionInput : `v${versionInput}`;
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+              let tagAlreadyExists = false;
+              try {
+                await github.rest.git.getRef({ owner, repo, ref: `tags/${tagName}` });
+                tagAlreadyExists = true;
+              } catch (error) {
+                const status = error && typeof error === 'object' && 'status' in error ? error.status : null;
+                if (status !== 404) {
+                  throw error;
+                }
+              }
 
-      - name: Typecheck
-        run: pnpm typecheck
+              if (tagAlreadyExists) {
+                core.setFailed(`Tag ${tagName} already exists. Use a new version or run the workflow from the existing tag push.`);
+                return;
+              }
 
-      - name: Lint
-        run: pnpm lint
+              const main = await github.rest.repos.getBranch({ owner, repo, branch: 'main' });
+              const mainSha = main.data.commit.sha;
 
-      - name: Build
-        run: pnpm build
+              core.info(`Creating tag ${tagName} at ${mainSha}...`);
+              await github.rest.git.createRef({
+                owner,
+                repo,
+                ref: `refs/tags/${tagName}`,
+                sha: mainSha,
+              });
+              core.info(`Tag ${tagName} created.`);
+            } else {
+              tagName = context.ref.replace('refs/tags/', '');
+            }
 
-      - name: Test
-        run: pnpm test
+            if (!tagName || !tagName.startsWith('v')) {
+              core.info(`Ref '${context.ref}' is not a release tag; skipping.`);
+              core.setOutput('release_tag', '');
+              core.setOutput('ready', 'false');
+              return;
+            }
 
-  publish:
-    name: Publish npm + MCP + GitHub Release
-    needs:
-      - prepare
-      - ci
+            const refData = await github.rest.git.getRef({
+              owner,
+              repo,
+              ref: `tags/${tagName}`,
+            });
+
+            const refObj = refData.data.object;
+            const taggedSha =
+              refObj.type === 'tag'
+                ? (await github.rest.git.getTag({ owner, repo, tag_sha: refObj.sha })).data.object.sha
+                : refObj.sha;
+            const main = await github.rest.repos.getBranch({ owner, repo, branch: 'main' });
+            const mainSha = main.data.commit.sha;
+
+            if (taggedSha !== mainSha) {
+              core.setFailed(
+                `Release blocked: tag ${tagName} points to ${taggedSha}, but latest main is ${mainSha}.`
+              );
+              return;
+            }
+
+            const requiredWorkflows = ['CI'];
+
+            for (const workflowName of requiredWorkflows) {
+              const workflowsResp = await github.rest.actions.listRepoWorkflows({
+                owner,
+                repo,
+                per_page: 100,
+              });
+
+              const workflow = workflowsResp.data.workflows.find(w => w.name === workflowName);
+              if (!workflow) {
+                core.setFailed(`Release blocked: required workflow '${workflowName}' not found in repository.`);
+                return;
+              }
+
+              const runsResp = await github.rest.actions.listWorkflowRuns({
+                owner,
+                repo,
+                workflow_id: workflow.id,
+                branch: 'main',
+                head_sha: mainSha,
+                status: 'completed',
+                per_page: 10,
+              });
+
+              const run = runsResp.data.workflow_runs[0];
+              if (!run) {
+                core.setFailed(
+                  `Release blocked: required workflow '${workflowName}' has no completed run for ${mainSha}.`
+                );
+                return;
+              }
+              if (run.conclusion !== 'success') {
+                core.setFailed(
+                  `Release blocked: workflow '${workflowName}' concluded with '${run.conclusion}' on ${mainSha}.`
+                );
+                return;
+              }
+            }
+
+            core.info(`Release tag detected: ${tagName} on latest main commit ${mainSha}; all checks passed.`);
+            core.setOutput('release_tag', tagName);
+            core.setOutput('ready', 'true');
+
+  release:
+    name: Build and Release
+    needs: detect-tag
+    if: needs.detect-tag.outputs.release_tag != '' && needs.detect-tag.outputs.ready == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
     permissions:
       contents: write
       id-token: write
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
+          ref: ${{ needs.detect-tag.outputs.release_tag }}
           fetch-depth: 0
 
-      - name: Ensure release tag exists locally
-        shell: bash
-        run: |
-          set -euo pipefail
-          if ! git rev-parse "${TAG_NAME}" >/dev/null 2>&1; then
-            git tag "${TAG_NAME}" "${GITHUB_SHA}"
-          fi
-        env:
-          TAG_NAME: ${{ needs.prepare.outputs.tag_name }}
-
-      - name: Build changelog
+      - name: Generate release notes
         id: changelog_notes
-        uses: mikepenz/release-changelog-builder-action@v6
+        uses: actions/github-script@v8
         with:
-          toTag: ${{ needs.prepare.outputs.tag_name }}
-          failOnError: "true"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const currentTag = '${{ needs.detect-tag.outputs.release_tag }}';
+
+            const tagsResp = await github.rest.repos.listTags({
+              owner,
+              repo,
+              per_page: 100,
+            });
+            const tags = tagsResp.data;
+
+            const index = tags.findIndex(tag => tag.name === currentTag);
+            const previousTag =
+              index >= 0
+                ? (tags.slice(index + 1).find(tag => tag.name.startsWith('v'))?.name ?? '')
+                : '';
+
+            const notesResponse = await github.rest.repos.generateReleaseNotes({
+              owner,
+              repo,
+              tag_name: currentTag,
+              ...(previousTag ? { previous_tag_name: previousTag } : {}),
+              target_commitish: 'main',
+            });
+
+            core.info(
+              previousTag
+                ? `Generated changelog notes from ${previousTag} to ${currentTag}.`
+                : `Generated changelog notes for ${currentTag} (no previous tag found).`
+            );
+
+            core.setOutput('previous_tag', previousTag);
+            core.setOutput('notes', notesResponse.data.body ?? '');
 
       - name: Write release notes to file
         run: printf '%s' "$RELEASE_NOTES" > release-notes.md
         env:
-          RELEASE_NOTES: ${{ steps.changelog_notes.outputs.changelog }}
-
-      - name: Setup Node.js (npm provenance / OIDC)
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: 20
-          registry-url: "https://registry.npmjs.org"
+          RELEASE_NOTES: ${{ steps.changelog_notes.outputs.notes }}
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build dist
+      - name: Build package
         run: pnpm build
 
-      - name: Publish package to npm (OIDC)
+      - name: Verify tag matches package version
+        run: |
+          node -e "
+            const fs = require('fs');
+            const releaseTag = process.env.RELEASE_TAG;
+            const expectedVersion = releaseTag.replace(/^v/, '');
+            const pkg = JSON.parse(fs.readFileSync('./dist/package.json', 'utf8'));
+            if (pkg.version !== expectedVersion) {
+              console.error('Release tag ' + releaseTag + ' does not match dist/package.json version ' + pkg.version);
+              process.exit(1);
+            }
+            console.log('Verified release tag ' + releaseTag + ' matches dist/package.json version ' + pkg.version);
+          "
         env:
-          NODE_AUTH_TOKEN: ""
-        run: npm publish ./dist --access public --provenance --tag "${{ needs.prepare.outputs.dist_tag }}"
+          RELEASE_TAG: ${{ needs.detect-tag.outputs.release_tag }}
+
+      - name: Ensure npm CLI supports trusted publishing (>=11.5.1)
+        run: |
+          set -euo pipefail
+          version_is_supported() {
+            node -e "
+              const [maj = 0, min = 0, patch = 0] = (process.argv[1] || '')
+                .split('.')
+                .map(v => Number.parseInt(v, 10));
+              const ok = maj > 11 || (maj === 11 && (min > 5 || (min === 5 && patch >= 1)));
+              process.exit(ok ? 0 : 1);
+            " "$1"
+          }
+
+          RUNNER_NPM="$(npm --version)"
+          echo "Runner npm: ${RUNNER_NPM}"
+
+          PNPM_NPM="$(pnpm dlx npm@11.6.2 --version)"
+          echo "pnpm-managed npm: ${PNPM_NPM}"
+
+          if ! version_is_supported "${PNPM_NPM}"; then
+            echo "❌ pnpm-managed npm ${PNPM_NPM} does not meet trusted publishing minimum (>=11.5.1)."
+            exit 1
+          fi
+
+          echo "✅ Using pnpm dlx npm@11.6.2 for publish"
 
       - name: Pack npm tarball
         run: npm pack ./dist --pack-destination .
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
+        uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ needs.prepare.outputs.tag_name }}
+          tag_name: ${{ needs.detect-tag.outputs.release_tag }}
           body_path: release-notes.md
           files: "*.tgz"
           draft: false
-          prerelease: ${{ contains(needs.prepare.outputs.tag_name, '-') }}
+          prerelease: ${{ contains(needs.detect-tag.outputs.release_tag, '-') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install mcp-publisher
-        shell: bash
+      - name: Publish to npm
         run: |
           set -euo pipefail
-          OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
-          ARCH="$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"
-          URL="https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_${OS}_${ARCH}.tar.gz"
-          curl -fsSL "$URL" | tar xz mcp-publisher
 
-      - name: Login to MCP Registry with GitHub OIDC
-        run: ./mcp-publisher login github-oidc
+          dump_npm_debug_log() {
+            local latest_log
+            latest_log="$(ls -t /home/runner/.npm/_logs/*-debug-*.log 2>/dev/null | head -n1 || true)"
+            if [[ -n "${latest_log}" && -f "${latest_log}" ]]; then
+              echo "📄 npm debug log: ${latest_log}"
+              echo "----- npm debug log (last 120 lines) -----"
+              tail -n 120 "${latest_log}" || true
+              echo "------------------------------------------"
+            else
+              echo "ℹ️ No npm debug log found in /home/runner/.npm/_logs"
+            fi
+          }
 
-      - name: Publish to MCP Registry
-        run: ./mcp-publisher publish docs/public/server.json
+          publish_with_diagnostics() {
+            local dist_tag="$1"
+
+            set +e
+            pnpm dlx npm@11.6.2 publish ./dist --access public --tag="${dist_tag}" --provenance
+            local publish_exit=$?
+            set -e
+
+            if [[ ${publish_exit} -ne 0 ]]; then
+              echo "❌ npm publish failed (exit ${publish_exit})."
+              echo "ℹ️ Diagnostic context: trusted publishing uses OIDC + provenance; failures after provenance often indicate package authorization mismatch in npm registry settings."
+              dump_npm_debug_log
+              exit ${publish_exit}
+            fi
+          }
+
+          DIST_TAG="$([[ '${{ contains(needs.detect-tag.outputs.release_tag, '-') }}' == 'true' ]] && echo 'next' || echo 'latest')"
+          publish_with_diagnostics "$DIST_TAG"
