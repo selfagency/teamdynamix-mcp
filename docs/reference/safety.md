@@ -2,14 +2,17 @@
 title: Safety
 ---
 
-## Write and admin gates
+## Write, delete, and admin gates
 
 | Gate | Default | Meaning |
 | --- | --- | --- |
 | `TEAMDYNAMIX_ENABLE_WRITE_TOOLS` | `false` | Disables mutating tools unless explicitly enabled |
+| `TEAMDYNAMIX_ENABLE_DELETE_TOOLS` | `false` | Disables asset, CI, service, and service category deletion unless explicitly enabled |
 | `TEAMDYNAMIX_ENABLE_ADMIN_TOOLS` | `false` | Disables admin-scope operations unless explicitly enabled |
 
 Write-guard enforcement is done in service-layer assertions before mutating API calls.
+Delete-guard enforcement is done via `assertDeleteToolsEnabled` which checks
+`config.enableDeleteTools`.
 
 ## Destructive confirmations
 
@@ -17,6 +20,10 @@ The following tools require explicit `confirm: true` in input schema:
 
 - `teamdynamix_remove_ticket_asset`
 - `teamdynamix_remove_ticket_contact`
+- `teamdynamix_delete_asset` (also requires `TEAMDYNAMIX_ENABLE_DELETE_TOOLS=true`)
+- `teamdynamix_delete_ci` (also requires `TEAMDYNAMIX_ENABLE_DELETE_TOOLS=true`)
+- `teamdynamix_delete_service` (also requires `TEAMDYNAMIX_ENABLE_DELETE_TOOLS=true`)
+- `teamdynamix_delete_service_category` (also requires `TEAMDYNAMIX_ENABLE_DELETE_TOOLS=true`)
 
 ## Validation and bounds
 
@@ -43,6 +50,6 @@ The following tools require explicit `confirm: true` in input schema:
 
 ## Dependency and CVE monitoring
 
-- CI runs `pnpm audit --prod` on every push and pull request.
-- High or moderate vulnerabilities in production dependencies are treated as release blockers.
-- If upstream SDK updates are delayed, patched transitive versions are enforced via package manager overrides until upstream catches up.
+- Dependencies are evaluated at build time; no automated CVE gating in CI.
+- Vulnerabilities in transitive dependencies (e.g. MCP SDK deps) are addressed
+  by updating the SDK version.

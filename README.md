@@ -10,8 +10,8 @@ A TypeScript [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) se
 - **11 domain gateway tools** that route validated actions across discovery,
   tickets, relationships, KB, assets, CMDB, people, services, projects,
   time, and reference data
-- **Safe by default**: write tools disabled until explicitly opted in;
-  destructive operations require `confirm: true`
+- **Safe by default**: write, delete, and admin tools disabled until
+  explicitly opted in; destructive operations require `confirm: true`
 - **Two auth modes**: standard (username/password) and admin (BEID/WebServicesKey)
 - **Covers 207 API endpoints** across all TeamDynamix domains, verified against the SDK route manifest
 - **Rate-limit aware**: SDK built-in retry with exponential backoff on 429 and 5xx responses
@@ -156,13 +156,14 @@ All write/mutating actions require `TEAMDYNAMIX_ENABLE_WRITE_TOOLS=true`.
 
 ## Safety defaults
 
-| Flag                             | Default | Effect when `true`                               |
-| -------------------------------- | ------- | ------------------------------------------------ |
-| `TEAMDYNAMIX_ENABLE_WRITE_TOOLS` | `false` | Enables all create/update/comment/mutation tools |
-| `TEAMDYNAMIX_ENABLE_ADMIN_TOOLS` | `false` | Enables admin-scope operations                   |
+| Flag                              | Default | Effect when `true`                                        |
+| --------------------------------- | ------- | --------------------------------------------------------- |
+| `TEAMDYNAMIX_ENABLE_WRITE_TOOLS`  | `false` | Enables all create/update/comment/mutation tools          |
+| `TEAMDYNAMIX_ENABLE_DELETE_TOOLS` | `false` | Enables asset, CI, service, and service category deletion |
+| `TEAMDYNAMIX_ENABLE_ADMIN_TOOLS`  | `false` | Enables admin-scope operations                            |
 
-Destructive unlink operations additionally require `confirm: true` in the
-tool call regardless of write flag state.
+Destructive operations additionally require `confirm: true` in the
+tool call regardless of the flag state.
 
 ## Agent skill
 
@@ -193,7 +194,7 @@ Install the skill via your Copilot skill configuration
 ```sh
 pnpm typecheck   # TypeScript strict checks
 pnpm lint        # oxlint
-pnpm test        # vitest (194 tests, 87% coverage)
+pnpm test        # vitest (200+ tests, 90%+ coverage)
 pnpm build       # tsup → dist/
 ```
 

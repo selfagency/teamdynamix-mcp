@@ -40,7 +40,8 @@ TeamDynamix workflows.
 | `TEAMDYNAMIX_AUTH_MODE`                             | ✅                        | `standard` or `admin`                              |
 | `TEAMDYNAMIX_USERNAME` / `TEAMDYNAMIX_PASSWORD`     | ✅ in standard mode       | Standard auth credentials                          |
 | `TEAMDYNAMIX_BEID` / `TEAMDYNAMIX_WEB_SERVICES_KEY` | ✅ in admin mode          | Admin auth credentials                             |
-| `TEAMDYNAMIX_ENABLE_WRITE_TOOLS`                    | Optional, default `false` | Required for create/update/delete tool paths       |
+| `TEAMDYNAMIX_ENABLE_WRITE_TOOLS`                    | Optional, default `false` | Required for create/update/comment tool paths      |
+| `TEAMDYNAMIX_ENABLE_DELETE_TOOLS`                   | Optional, default `false` | Required for asset/CI/service deletion tool paths  |
 | `TEAMDYNAMIX_ENABLE_ADMIN_TOOLS`                    | Optional, default `false` | Required for admin-only/bulk operations            |
 | `TEAMDYNAMIX_DEFAULT_TICKET_APP_ID`                 | Optional                  | Default ticket app ID when `app_id` is omitted     |
 | `TEAMDYNAMIX_DEFAULT_ASSET_APP_ID`                  | Optional                  | Default asset app ID when `app_id` is omitted      |
@@ -53,9 +54,10 @@ TeamDynamix workflows.
 3. **Load full object** after search/list when details may be partial.
 4. **Plan write operations** and summarize intended changes before execution.
 5. **Check safety gates**:
-   - write operation -> require `TEAMDYNAMIX_ENABLE_WRITE_TOOLS=true`
-   - admin operation -> require `TEAMDYNAMIX_ENABLE_ADMIN_TOOLS=true`
-   - destructive operation -> require `confirm: true`
+   - write operation → require `TEAMDYNAMIX_ENABLE_WRITE_TOOLS=true`
+   - delete operation → require `TEAMDYNAMIX_ENABLE_DELETE_TOOLS=true` + `confirm: true`
+   - admin operation → require `TEAMDYNAMIX_ENABLE_ADMIN_TOOLS=true`
+   - destructive operation → require `confirm: true`
 6. **Execute** with smallest safe sequence of tools.
 7. **Verify result** by re-reading target object/feed/relationship list.
 8. **Report outcome** with IDs, changed fields, and any follow-up actions.
