@@ -25,6 +25,7 @@ title: Configuration
 | `TEAMDYNAMIX_TIMEOUT_MS` | `30000` | HTTP timeout budget |
 | `TEAMDYNAMIX_MAX_RETRIES` | `2` | Retry budget for transient failures |
 | `TEAMDYNAMIX_ENABLE_WRITE_TOOLS` | `false` | Enables create/update/comment/mutation operations |
+| `TEAMDYNAMIX_ENABLE_DELETE_TOOLS` | `false` | Enables asset, CI, service, and service category deletion |
 | `TEAMDYNAMIX_ENABLE_ADMIN_TOOLS` | `false` | Enables admin-only operations |
 
 ## Optional server metadata variables

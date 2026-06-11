@@ -97,6 +97,7 @@ Current TeamDynamix MCP tool catalog.
 | `search_assets` | read |
 | `list_asset_statuses` | read |
 | `list_product_models` | read |
+| `delete_asset` | destructive (requires `TEAMDYNAMIX_ENABLE_DELETE_TOOLS=true` + `confirm: true`) |
 
 ## CMDB gateway actions (`teamdynamix_cmdb`)
 
@@ -107,6 +108,7 @@ Current TeamDynamix MCP tool catalog.
 | `list_ci_types` | read |
 | `list_ci_relationship_types` | read |
 | `list_vendors` | read |
+| `delete_ci` | destructive (requires `TEAMDYNAMIX_ENABLE_DELETE_TOOLS=true` + `confirm: true`) |
 
 ## Services gateway actions (`teamdynamix_services`)
 
@@ -116,6 +118,8 @@ Current TeamDynamix MCP tool catalog.
 | `get_service` | read |
 | `search_services` | read |
 | `list_service_categories` | read |
+| `delete_service` | destructive (requires `TEAMDYNAMIX_ENABLE_DELETE_TOOLS=true` + `confirm: true`) |
+| `delete_service_category` | destructive (requires `TEAMDYNAMIX_ENABLE_DELETE_TOOLS=true` + `confirm: true`) |
 
 ## Projects gateway actions (`teamdynamix_projects`)
 
@@ -149,6 +153,7 @@ Current TeamDynamix MCP tool catalog.
 
 ## Safety implications
 
-- All `write` and `destructive` actions require
-  `TEAMDYNAMIX_ENABLE_WRITE_TOOLS=true`.
-- Destructive unlink operations also require `confirm: true`.
+- All `write` actions require `TEAMDYNAMIX_ENABLE_WRITE_TOOLS=true`.
+- All `destructive` actions require both their domain flag and `confirm: true`:
+  - Ticket relationship unlinks require `TEAMDYNAMIX_ENABLE_WRITE_TOOLS=true` + `confirm: true`
+  - Asset/CI/service/service category deletion requires `TEAMDYNAMIX_ENABLE_DELETE_TOOLS=true` + `confirm: true`
