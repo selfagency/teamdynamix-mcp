@@ -6,7 +6,6 @@ A TypeScript [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) se
 
 ## Features
 
-- **Powered by the official TeamDynamix TypeScript SDK**: type-safe, auto-generated API methods with built-in retry, exponential backoff, runtime validation, and token lifecycle management
 - **11 domain gateway tools** that route validated actions across discovery,
   tickets, relationships, KB, assets, CMDB, people, services, projects,
   time, and reference data
