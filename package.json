@@ -1,6 +1,6 @@
 {
   "name": "@selfagency/teamdynamix-mcp",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "private": false,
   "description": "A production-ready TypeScript MCP server for TeamDynamix",
   "keywords": [
@@ -46,7 +46,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "@selfagency/teamdynamix-ts": "^0.1.3",
+    "@selfagency/teamdynamix-ts": "^0.1.4",
     "tablemark": "^4.1.0",
     "zod": "^4.4.3"
   },
