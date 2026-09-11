@@ -1,7 +1,33 @@
+import { existsSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createTeamDynamixClient, loginWithPassword, loginWithServiceAccount } from '@selfagency/teamdynamix-ts';
 import type { TeamDynamixClientConfig, TeamDynamixSdk } from '@selfagency/teamdynamix-ts';
 import type { TeamDynamixConfig } from '../types.js';
 
+// ponytail: resolve spec from installed SDK package, not process.cwd() — host cwd is
+// C:\Windows\System32 under Raycast/MCP hosts. Remove when SDK ships module-relative defaultSpecPath.
+let cachedSpecPath: string | undefined;
+function resolveSdkSpecPath(): string | undefined {
+  const override = process.env['TEAMDYNAMIX_SPEC_PATH']?.trim();
+  if (override) return override;
+  if (cachedSpecPath) return cachedSpecPath;
+  try {
+    const require = createRequire(fileURLToPath(import.meta.url));
+    const pkgPath = require.resolve('@selfagency/teamdynamix-ts/package.json');
+    const pkgRoot = dirname(pkgPath);
+    const candidates = [
+      resolve(pkgRoot, 'dist/generated/openapi.json'),
+      resolve(pkgRoot, 'generated/openapi.json'),
+      resolve(pkgRoot, 'src/generated/openapi.json'),
+    ];
+    cachedSpecPath = candidates.find(p => existsSync(p));
+    return cachedSpecPath;
+  } catch {
+    return undefined;
+  }
+}
 /**
  * Creates a token provider for the SDK client.
  *
@@ -61,7 +87,8 @@ function buildSdkConfig(
     environment: config.baseUrl?.includes('sandbox') ? 'sandbox' : 'production',
     baseUrl: config.baseUrl,
     timeoutMs: config.timeoutMs,
-    runtimeValidationMode: config.enableAdminTools ? 'fail-closed' : 'fail-open',
+    runtimeValidationMode: 'fail-open',
+    ...(resolveSdkSpecPath() ? { specPath: resolveSdkSpecPath() as string } : {}),
     retryPolicy: {
       maxRetries: config.maxRetries,
     },
