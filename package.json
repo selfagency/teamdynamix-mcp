@@ -45,26 +45,26 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "@selfagency/teamdynamix-ts": "^0.1.4",
     "tablemark": "^4.1.0",
-    "zod": "^4.4.3"
+    "zod": "^4.6.2"
   },
   "devDependencies": {
     "@octokit/rest": "^22.0.1",
     "@types/node": "25.9.2",
-    "@vitest/coverage-v8": "^4.1.8",
+    "@vitest/coverage-v8": "^5.0.0",
     "husky": "^9.1.7",
-    "lint-staged": "^16.4.0",
-    "ora": "^9.4.0",
-    "oxfmt": "^0.54.0",
-    "oxlint": "^1.69.0",
+    "lint-staged": "^17.5.1",
+    "ora": "^9.4.1",
+    "oxfmt": "^0.67.0",
+    "oxlint": "^1.82.0",
     "tsup": "^8.5.1",
-    "tsx": "^4.22.4",
+    "tsx": "^4.23.13",
     "typescript": "6.0.3",
-    "vite": "8.0.16",
+    "vite": "8.3.0",
     "vitepress": "^1.6.4",
-    "vitest": "4.1.8",
+    "vitest": "5.0.0",
     "zx": "^8.8.5"
   },
   "lint-staged": {
