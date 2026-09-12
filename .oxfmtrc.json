@@ -13,7 +13,8 @@
     "playwright-report",
     "test-results",
     "results.sarif",
-    "src/lexicons"
+    "src/lexicons",
+    "CHANGELOG.md"
   ],
   "arrowParens": "avoid",
   "bracketSpacing": true,

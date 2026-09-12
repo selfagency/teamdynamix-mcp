@@ -22,14 +22,18 @@ jobs:
   detect-tag:
     name: Detect release tag and readiness
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 25
     permissions:
       contents: write
-      actions: read
+      actions: write
 
     outputs:
       release_tag: ${{ steps.tag.outputs.release_tag }}
       ready: ${{ steps.tag.outputs.ready }}
+      created_by_dispatch: ${{ steps.tag.outputs.created_by_dispatch }}
+      bump_sha: ${{ steps.tag.outputs.bump_sha }}
+      pre_pkg_b64: ${{ steps.tag.outputs.pre_pkg_b64 }}
+      pre_cl_b64: ${{ steps.tag.outputs.pre_cl_b64 }}
 
     steps:
       - name: Resolve tag and verify CI readiness
@@ -42,6 +46,11 @@ jobs:
             const repo = context.repo.repo;
 
             let tagName;
+
+            core.setOutput('created_by_dispatch', 'false');
+            core.setOutput('bump_sha', '');
+            core.setOutput('pre_pkg_b64', '');
+            core.setOutput('pre_cl_b64', '');
 
             if (context.eventName === 'workflow_dispatch') {
               const versionInput = '${{ inputs.version }}'.trim();
@@ -67,15 +76,145 @@ jobs:
                 return;
               }
 
+              const version = tagName.replace(/^v/, '');
               const main = await github.rest.repos.getBranch({ owner, repo, branch: 'main' });
               const mainSha = main.data.commit.sha;
 
-              core.info(`Creating tag ${tagName} at ${mainSha}...`);
+              // Generate release notes for the upcoming tag (previous tag lookup)
+              const tagsResp = await github.rest.repos.listTags({ owner, repo, per_page: 100 });
+              const previousTag = tagsResp.data.find(tag => tag.name.startsWith('v'))?.name ?? '';
+
+              const notesResponse = await github.rest.repos.generateReleaseNotes({
+                owner,
+                repo,
+                tag_name: tagName,
+                ...(previousTag ? { previous_tag_name: previousTag } : {}),
+                target_commitish: 'main',
+              });
+              const notes = notesResponse.data.body ?? '';
+
+              // Bump package.json version
+              const pkgResp = await github.rest.repos.getContent({
+                owner,
+                repo,
+                path: 'package.json',
+                ref: 'main',
+              });
+              const pkg = JSON.parse(Buffer.from(pkgResp.data.content, 'base64').toString('utf8'));
+              pkg.version = version;
+              const pkgContent = JSON.stringify(pkg, null, 2) + '\n';
+
+              // Prepend CHANGELOG.md entry
+              const today = new Date().toISOString().slice(0, 10);
+              const section = `## ${tagName} - ${today}\n\n${notes}\n\n`;
+              let changelogContent;
+              let clB64 = '';
+              try {
+                const clResp = await github.rest.repos.getContent({
+                  owner,
+                  repo,
+                  path: 'CHANGELOG.md',
+                  ref: 'main',
+                });
+                clB64 = clResp.data.content;
+                const existing = Buffer.from(clResp.data.content, 'base64').toString('utf8');
+                changelogContent = section + existing;
+              } catch (error) {
+                const status = error && typeof error === 'object' && 'status' in error ? error.status : null;
+                if (status !== 404) {
+                  throw error;
+                }
+                changelogContent = `# Changelog\n\n${section}`;
+              }
+
+              // Commit version bump + changelog to main
+              const pkgBlob = await github.rest.git.createBlob({
+                owner,
+                repo,
+                content: Buffer.from(pkgContent, 'utf8').toString('base64'),
+                encoding: 'base64',
+              });
+              const clBlob = await github.rest.git.createBlob({
+                owner,
+                repo,
+                content: Buffer.from(changelogContent, 'utf8').toString('base64'),
+                encoding: 'base64',
+              });
+              const mainCommit = await github.rest.git.getCommit({ owner, repo, commit_sha: mainSha });
+              const tree = await github.rest.git.createTree({
+                owner,
+                repo,
+                base_tree: mainCommit.data.tree.sha,
+                tree: [
+                  { path: 'package.json', mode: '100644', type: 'blob', sha: pkgBlob.data.sha },
+                  { path: 'CHANGELOG.md', mode: '100644', type: 'blob', sha: clBlob.data.sha },
+                ],
+              });
+              const bumpCommit = await github.rest.git.createCommit({
+                owner,
+                repo,
+                message: `chore(release): v${version}`,
+                tree: tree.data.sha,
+                parents: [mainSha],
+              });
+              await github.rest.git.updateRef({
+                owner,
+                repo,
+                ref: 'heads/main',
+                sha: bumpCommit.data.sha,
+              });
+              core.info(`Committed version bump ${version} + changelog to main (${bumpCommit.data.sha}).`);
+
+              core.setOutput('created_by_dispatch', 'true');
+              core.setOutput('bump_sha', bumpCommit.data.sha);
+              core.setOutput('pre_pkg_b64', pkgResp.data.content.replace(/\s/g, ''));
+              core.setOutput('pre_cl_b64', (clB64 ?? '').replace(/\s/g, ''));
+
+              // GITHUB_TOKEN pushes don't trigger on:push workflows, so dispatch CI explicitly
+              await github.rest.actions.createWorkflowDispatch({
+                owner,
+                repo,
+                workflow_id: 'ci.yml',
+                ref: 'main',
+              });
+              core.info('Dispatched CI on release bump commit.');
+
+              // Wait for CI to pass on the fresh bump commit before tagging
+              const deadline = Date.now() + 15 * 60 * 1000;
+              const start = Date.now();
+              let ciOk = false;
+              let poll = 0;
+              while (Date.now() < deadline) {
+                const runsResp = await github.rest.actions.listWorkflowRuns({
+                  owner,
+                  repo,
+                  workflow_id: 'ci.yml',
+                  head_sha: bumpCommit.data.sha,
+                  per_page: 5,
+                });
+                const run = runsResp.data.workflow_runs[0];
+                if (run && run.status === 'completed') {
+                  if (run.conclusion === 'success') {
+                    ciOk = true;
+                    break;
+                  }
+                  core.setFailed(`Release blocked: CI concluded '${run.conclusion}' on release bump commit ${bumpCommit.data.sha}.`);
+                  return;
+                }
+                core.info(`Waiting for CI on ${bumpCommit.data.sha}... (poll ${++poll}, elapsed ${Math.round((Date.now() - start) / 1000)}s)`);
+                await new Promise(resolve => setTimeout(resolve, 15000));
+              }
+              if (!ciOk) {
+                core.setFailed(`Release blocked: timed out waiting for CI on release bump commit ${bumpCommit.data.sha}.`);
+                return;
+              }
+
+              core.info(`Creating tag ${tagName} at ${bumpCommit.data.sha}...`);
               await github.rest.git.createRef({
                 owner,
                 repo,
                 ref: `refs/tags/${tagName}`,
-                sha: mainSha,
+                sha: bumpCommit.data.sha,
               });
               core.info(`Tag ${tagName} created.`);
             } else {
@@ -323,3 +462,103 @@ jobs:
 
           DIST_TAG="$([[ '${{ contains(needs.detect-tag.outputs.release_tag, '-') }}' == 'true' ]] && echo 'next' || echo 'latest')"
           publish_with_diagnostics "$DIST_TAG"
+
+  rollback:
+    name: Rollback failed release
+    needs: [detect-tag, release]
+    if: always() && ((needs.release.result == 'failure' && needs.detect-tag.outputs.release_tag != '') || (needs.detect-tag.result == 'failure' && needs.detect-tag.outputs.bump_sha != '') || (needs.detect-tag.outputs.created_by_dispatch == 'true' && cancelled() && needs.detect-tag.outputs.bump_sha != ''))
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+
+    steps:
+      - name: Revert release artifacts
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const tag = '${{ needs.detect-tag.outputs.release_tag }}';
+            const createdByDispatch = '${{ needs.detect-tag.outputs.created_by_dispatch }}' === 'true';
+
+            // Delete the GitHub release object if one was created
+            if (tag) {
+              try {
+                const rel = await github.rest.repos.getReleaseByTag({ owner, repo, tag });
+                await github.rest.repos.deleteRelease({ owner, repo, release_id: rel.data.id });
+                core.info(`Deleted GitHub release for ${tag}.`);
+              } catch (error) {
+                if (error.status !== 404) throw error;
+                core.info(`No GitHub release found for ${tag}.`);
+              }
+            }
+
+            if (!createdByDispatch) {
+              core.info('Tag was pushed manually; leaving tag in place.');
+              return;
+            }
+
+            // Delete the auto-created tag
+            if (tag) {
+              try {
+                await github.rest.git.deleteRef({ owner, repo, ref: `tags/${tag}` });
+                core.info(`Deleted tag ${tag}.`);
+              } catch (error) {
+                if (error.status !== 404) throw error;
+                core.info(`Tag ${tag} not found.`);
+              }
+            }
+
+            // Restore package.json + CHANGELOG.md to their pre-bump state on main
+            const prePkgB64 = '${{ needs.detect-tag.outputs.pre_pkg_b64 }}';
+            const preClB64 = '${{ needs.detect-tag.outputs.pre_cl_b64 }}';
+            if (!prePkgB64) {
+              core.warning('No pre-bump package.json snapshot; skipping main revert.');
+              return;
+            }
+
+            const pkgBlob = await github.rest.git.createBlob({
+              owner,
+              repo,
+              content: prePkgB64,
+              encoding: 'base64',
+            });
+            const treeEntries = [
+              { path: 'package.json', mode: '100644', type: 'blob', sha: pkgBlob.data.sha },
+            ];
+            if (preClB64) {
+              const clBlob = await github.rest.git.createBlob({
+                owner,
+                repo,
+                content: preClB64,
+                encoding: 'base64',
+              });
+              treeEntries.push({ path: 'CHANGELOG.md', mode: '100644', type: 'blob', sha: clBlob.data.sha });
+            } else {
+              treeEntries.push({ path: 'CHANGELOG.md', mode: '100644', type: 'blob', sha: null });
+            }
+
+            const head = await github.rest.repos.getBranch({ owner, repo, branch: 'main' });
+            const headCommit = await github.rest.git.getCommit({ owner, repo, commit_sha: head.data.commit.sha });
+            const tree = await github.rest.git.createTree({
+              owner,
+              repo,
+              base_tree: headCommit.data.tree.sha,
+              tree: treeEntries,
+            });
+            const revertCommit = await github.rest.git.createCommit({
+              owner,
+              repo,
+              message: `chore(release): revert failed release ${tag}`,
+              tree: tree.data.sha,
+              parents: [head.data.commit.sha],
+            });
+            await github.rest.git.updateRef({
+              owner,
+              repo,
+              ref: 'heads/main',
+              sha: revertCommit.data.sha,
+            });
+            core.info(`Reverted release bump on main (${revertCommit.data.sha}).`);
