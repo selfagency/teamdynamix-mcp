@@ -56,6 +56,11 @@ TEAMDYNAMIX_BASE_URL=https://your-tenant.teamdynamix.com/TDWebApi
 TEAMDYNAMIX_AUTH_MODE=standard          # or: admin
 TEAMDYNAMIX_USERNAME=you@example.com    # standard mode
 TEAMDYNAMIX_PASSWORD=your-password      # standard mode
+
+# Optional: default application IDs (used when app_id is omitted in tool calls)
+TEAMDYNAMIX_DEFAULT_TICKET_APP_ID=12345
+TEAMDYNAMIX_DEFAULT_ASSET_APP_ID=23456
+TEAMDYNAMIX_DEFAULT_KB_APP_ID=34567
 ```
 
 For admin mode, use `TEAMDYNAMIX_BEID` and `TEAMDYNAMIX_WEB_SERVICES_KEY` instead.
