@@ -1,3 +1,7 @@
+## v0.3.0 - 2026-09-14
+
+**Full Changelog**: https://github.com/selfagency/teamdynamix-mcp/compare/v0.2.2...v0.3.0
+
 # Change Log
 
 ## [Unreleased]
