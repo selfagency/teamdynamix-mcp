@@ -1,5 +1,8 @@
+import pkg from '../package.json' with { type: 'json' };
+
 export const SERVER_NAME = 'teamdynamix-mcp';
-export const SERVER_VERSION = '0.2.0';
+// Single source of truth: package.json version (no more hardcoded drift)
+export const SERVER_VERSION = pkg.version;
 export const CHARACTER_LIMIT = 25_000;
 export const TEAMDYNAMIX_TOOL_PREFIX = 'teamdynamix';
 export const TEAMDYNAMIX_DEFAULT_TIMEOUT_MS = 30_000;
