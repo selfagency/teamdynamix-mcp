@@ -1,0 +1,6 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Test fixtures contain synthetic tokens, not real secrets"
+paths = ['''(^|/)__tests__/''', '''\.test\.ts$''', '''\.spec\.ts$''']
