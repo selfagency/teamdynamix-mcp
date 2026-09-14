@@ -15,8 +15,10 @@ function resolveSdkSpecPath(): string | undefined {
   if (cachedSpecPath) return cachedSpecPath;
   try {
     const require = createRequire(fileURLToPath(import.meta.url));
-    const pkgPath = require.resolve('@selfagency/teamdynamix-ts/package.json');
-    const pkgRoot = dirname(pkgPath);
+    // Resolve the package entry point (exported) rather than package.json (not exported
+    // via the SDK's exports map — ERR_PACKAGE_PATH_NOT_EXPORTED in published installs).
+    const entryPath = require.resolve('@selfagency/teamdynamix-ts');
+    const pkgRoot = dirname(entryPath);
     const candidates = [
       resolve(pkgRoot, 'dist/generated/openapi.json'),
       resolve(pkgRoot, 'generated/openapi.json'),
