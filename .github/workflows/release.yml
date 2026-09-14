@@ -170,6 +170,23 @@ jobs:
               core.setOutput('pre_pkg_b64', pkgResp.data.content.replace(/\s/g, ''));
               core.setOutput('pre_cl_b64', (clB64 ?? '').replace(/\s/g, ''));
 
+              // Confirm the ref update propagated before dispatching CI (dispatch resolves
+              // main at call time; a stale read would run CI on the wrong commit)
+              let refConfirmed = false;
+              for (let attempt = 0; attempt < 10; attempt++) {
+                const branch = await github.rest.repos.getBranch({ owner, repo, branch: 'main' });
+                if (branch.data.commit.sha === bumpCommit.data.sha) {
+                  refConfirmed = true;
+                  break;
+                }
+                core.info(`Waiting for main to reflect bump commit... (attempt ${attempt + 1})`);
+                await new Promise(resolve => setTimeout(resolve, 2000));
+              }
+              if (!refConfirmed) {
+                core.setFailed(`main does not reflect bump commit ${bumpCommit.data.sha}; aborting before CI dispatch.`);
+                return;
+              }
+
               // GITHUB_TOKEN pushes don't trigger on:push workflows, so dispatch CI explicitly
               await github.rest.actions.createWorkflowDispatch({
                 owner,
