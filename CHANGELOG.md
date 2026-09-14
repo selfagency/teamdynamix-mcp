@@ -1,3 +1,7 @@
+## v0.3.2 - 2026-09-14
+
+**Full Changelog**: https://github.com/selfagency/teamdynamix-mcp/compare/v0.3.1...v0.3.2
+
 ## v0.3.1 - 2026-09-14
 
 **Full Changelog**: https://github.com/selfagency/teamdynamix-mcp/compare/v0.3.0...v0.3.1
